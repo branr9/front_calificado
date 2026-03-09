@@ -46,6 +46,13 @@ import { ProgramaDTO } from '../../core/models/programa.model';
                   <td>{{ programa.codigoSnies || 'N/A' }}</td>
                   <td class="actions">
                     <button 
+                      class="btn-action btn-view" 
+                      (click)="onView(programa.id)"
+                      type="button"
+                      [attr.aria-label]="'Ver programa ' + programa.nombre">
+                      👁️
+                    </button>
+                    <button 
                       class="btn-action btn-edit" 
                       (click)="onEdit(programa.id)"
                       type="button"
@@ -257,6 +264,10 @@ export class ProgramaListComponent implements OnInit {
 
   onCreate(): void {
     this.router.navigate(['/programas/nuevo']);
+  }
+
+  onView(id: number): void {
+    this.router.navigate(['/programas', id]);
   }
 
   onEdit(id: number): void {

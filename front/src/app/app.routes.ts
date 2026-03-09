@@ -33,6 +33,14 @@ export const routes: Routes = [
         loadComponent: () => import('./features/programas/programa-form.component').then(m => m.ProgramaFormComponent)
       },
       {
+        path: 'programas/:id/lineamiento/:lineamiento',
+        loadComponent: () => import('./features/programas/lineamiento-detail.component').then(m => m.LineamientoDetailComponent)
+      },
+      {
+        path: 'programas/:id',
+        loadComponent: () => import('./features/programas/programa-detail.component').then(m => m.ProgramaDetailComponent)
+      },
+      {
         path: 'acreditaciones',
         loadComponent: () => import('./features/placeholder/placeholder.component').then(m => m.PlaceholderComponent),
         data: { title: 'Acreditaciones', icon: '📝' }
@@ -51,11 +59,6 @@ export const routes: Routes = [
         path: 'configuracion',
         loadComponent: () => import('./features/placeholder/placeholder.component').then(m => m.PlaceholderComponent),
         data: { title: 'Configuración', icon: '⚙️' }
-      },
-      {
-        path: 'departamentos',
-        loadComponent: () => import('./features/placeholder/placeholder.component').then(m => m.PlaceholderComponent),
-        data: { title: 'Departamentos', icon: '🏢' }
       },
       {
         path: 'lineamientos/:id',

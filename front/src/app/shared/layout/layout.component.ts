@@ -1,20 +1,11 @@
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
-import { LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lineamiento.model';
 
 interface MenuItem {
   icon: string;
   label: string;
   route: string;
-}
-
-interface LineamientoItem {
-  numero: number;
-  nombre: string;
-  icono: string;
-  route: string;
-  indicator?: boolean;
 }
 
 @Component({
@@ -47,24 +38,6 @@ interface LineamientoItem {
                 [attr.aria-label]="item.label">
                 <span class="nav-icon">{{ item.icon }}</span>
                 <span class="nav-label">{{ item.label }}</span>
-              </a>
-            }
-          </div>
-
-          <!-- Sección Lineamientos -->
-          <div class="nav-section">
-            <div class="section-title">LINEAMIENTOS</div>
-            @for (item of lineamientos; track item.numero) {
-              <a 
-                [routerLink]="item.route"
-                routerLinkActive="active"
-                class="nav-item lineamiento"
-                [attr.aria-label]="item.nombre">
-                <span class="nav-icon">{{ item.icono }}</span>
-                <span class="nav-label">{{ item.nombre }}</span>
-                @if (item.indicator) {
-                  <span class="indicator"></span>
-                }
               </a>
             }
           </div>
@@ -336,16 +309,9 @@ export class LayoutComponent {
 
   protected menuPrincipal: MenuItem[] = [
     { icon: '📊', label: 'Dashboard', route: '/dashboard' },
-    { icon: '🏢', label: 'Departamentos', route: '/departamentos' }
+    { icon: '�', label: 'Programas', route: '/programas' }
   ];
 
-  protected lineamientos: LineamientoItem[] = [
-    { numero: 1, nombre: 'Naturaleza y características', icono: '📚', route: '/lineamientos/1', indicator: true },
-    { numero: 2, nombre: 'Acceso y admisión', icono: '🎓', route: '/lineamientos/2', indicator: true },
-    { numero: 3, nombre: 'Administración académica', icono: '✨', route: '/lineamientos/3', indicator: true },
-    { numero: 4, nombre: 'Profesores', icono: '👨‍🏫', route: '/lineamientos/4', indicator: true },
-    { numero: 5, nombre: 'Procesos académicos', icono: '$', route: '/lineamientos/5', indicator: true }
-  ];
 
   onLogout(): void {
     this.authService.logout();

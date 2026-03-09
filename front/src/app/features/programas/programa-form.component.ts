@@ -3,6 +3,9 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ProgramaService } from '../../core/services/programa.service';
 import { ProgramaDTO } from '../../core/models/programa.model';
+import { DocumentoBaseService } from '../../core/services/documento-base.service';
+import { TipoDocumentoBase } from '../../core/models/evidencia.model';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-programa-form',
@@ -22,6 +25,9 @@ import { ProgramaDTO } from '../../core/models/programa.model';
           <div class="error">{{ error() }}</div>
         } @else {
           <form [formGroup]="programaForm" (ngSubmit)="onSubmit()">
+            <!-- Información Básica -->
+            <div class="section-title">📋 Información Básica</div>
+            
             <div class="form-group">
               <label for="nombre">
                 Nombre del Programa <span class="required">*</span>
@@ -93,6 +99,172 @@ import { ProgramaDTO } from '../../core/models/programa.model';
               <span class="help-text">Opcional</span>
             </div>
 
+            <!-- Documentos para IA -->
+            @if (!isEditMode()) {
+              <div class="section-title">🤖 Documentos para Alimentar IA</div>
+              <div class="help-banner">
+                📤 Sube los documentos PDF que servirán como base para que la IA genere contenido automático
+              </div>
+
+              <div class="upload-grid">
+                <div class="upload-card">
+                  <div class="upload-header">
+                    <div class="upload-icon">📚</div>
+                    <div>
+                      <div class="upload-title">Lineamientos</div>
+                      <div class="upload-desc">Documentos sobre los 9 lineamientos del Decreto 1330</div>
+                    </div>
+                  </div>
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    multiple
+                    (change)="onFileSelect($event, 'lineamientos')"
+                    #lineamientosInput
+                    class="file-input"
+                  />
+                  <button
+                    type="button"
+                    class="btn-upload"
+                    (click)="lineamientosInput.click()">
+                    Seleccionar PDFs
+                  </button>
+                  @if (archivosLineamientos().length > 0) {
+                    <div class="file-list">
+                      @for (file of archivosLineamientos(); track file.name) {
+                        <div class="file-item">
+                          <span class="file-name">📄 {{ file.name }}</span>
+                          <button
+                            type="button"
+                            class="btn-remove"
+                            (click)="removeFile('lineamientos', file.name)">
+                            ✕
+                          </button>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+
+                <div class="upload-card">
+                  <div class="upload-header">
+                    <div class="upload-icon">📝</div>
+                    <div>
+                      <div class="upload-title">Secciones</div>
+                      <div class="upload-desc">Documentos con detalles de secciones específicas</div>
+                    </div>
+                  </div>
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    multiple
+                    (change)="onFileSelect($event, 'secciones')"
+                    #seccionesInput
+                    class="file-input"
+                  />
+                  <button
+                    type="button"
+                    class="btn-upload"
+                    (click)="seccionesInput.click()">
+                    Seleccionar PDFs
+                  </button>
+                  @if (archivosSecciones().length > 0) {
+                    <div class="file-list">
+                      @for (file of archivosSecciones(); track file.name) {
+                        <div class="file-item">
+                          <span class="file-name">📄 {{ file.name }}</span>
+                          <button
+                            type="button"
+                            class="btn-remove"
+                            (click)="removeFile('secciones', file.name)">
+                            ✕
+                          </button>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+
+                <div class="upload-card">
+                  <div class="upload-header">
+                    <div class="upload-icon">📎</div>
+                    <div>
+                      <div class="upload-title">Evidencias</div>
+                      <div class="upload-desc">Documentos de soporte y evidencias</div>
+                    </div>
+                  </div>
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    multiple
+                    (change)="onFileSelect($event, 'evidencias')"
+                    #evidenciasInput
+                    class="file-input"
+                  />
+                  <button
+                    type="button"
+                    class="btn-upload"
+                    (click)="evidenciasInput.click()">
+                    Seleccionar PDFs
+                  </button>
+                  @if (archivosEvidencias().length > 0) {
+                    <div class="file-list">
+                      @for (file of archivosEvidencias(); track file.name) {
+                        <div class="file-item">
+                          <span class="file-name">📄 {{ file.name }}</span>
+                          <button
+                            type="button"
+                            class="btn-remove"
+                            (click)="removeFile('evidencias', file.name)">
+                            ✕
+                          </button>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+
+                <div class="upload-card">
+                  <div class="upload-header">
+                    <div class="upload-icon">📄</div>
+                    <div>
+                      <div class="upload-title">Documentos Base</div>
+                      <div class="upload-desc">Otros documentos de referencia</div>
+                    </div>
+                  </div>
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    multiple
+                    (change)="onFileSelect($event, 'documentos')"
+                    #documentosInput
+                    class="file-input"
+                  />
+                  <button
+                    type="button"
+                    class="btn-upload"
+                    (click)="documentosInput.click()">
+                    Seleccionar PDFs
+                  </button>
+                  @if (archivosDocumentos().length > 0) {
+                    <div class="file-list">
+                      @for (file of archivosDocumentos(); track file.name) {
+                        <div class="file-item">
+                          <span class="file-name">📄 {{ file.name }}</span>
+                          <button
+                            type="button"
+                            class="btn-remove"
+                            (click)="removeFile('documentos', file.name)">
+                            ✕
+                          </button>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
             <div class="form-actions">
               <button 
                 type="button" 
@@ -104,7 +276,7 @@ import { ProgramaDTO } from '../../core/models/programa.model';
                 type="submit" 
                 class="btn btn-primary"
                 [disabled]="!programaForm.valid || saving()">
-                {{ saving() ? 'Guardando...' : 'Guardar' }}
+                {{ saving() ? 'Guardando...' : (isEditMode() ? 'Actualizar' : 'Crear Programa') }}
               </button>
             </div>
           </form>
@@ -114,7 +286,7 @@ import { ProgramaDTO } from '../../core/models/programa.model';
   `,
   styles: [`
     .container {
-      max-width: 800px;
+      max-width: 1000px;
       margin: 0 auto;
       padding: 2rem;
     }
@@ -153,6 +325,24 @@ import { ProgramaDTO } from '../../core/models/programa.model';
 
     .btn-back:hover {
       background: #d0d0d0;
+    }
+
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #333;
+      margin: 2rem 0 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #667eea;
+    }
+
+    .help-banner {
+      background: #e3f2fd;
+      color: #1565c0;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.95rem;
     }
 
     .form-group {
@@ -207,6 +397,108 @@ import { ProgramaDTO } from '../../core/models/programa.model';
       margin-top: 0.25rem;
       color: #999;
       font-size: 0.85rem;
+    }
+
+    .upload-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .upload-card {
+      border: 2px dashed #ddd;
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      background: #fafafa;
+      transition: all 0.3s ease;
+    }
+
+    .upload-card:hover {
+      border-color: #667eea;
+      background: #f5f7ff;
+    }
+
+    .upload-header {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .upload-icon {
+      font-size: 2rem;
+    }
+
+    .upload-title {
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 0.25rem;
+    }
+
+    .upload-desc {
+      font-size: 0.85rem;
+      color: #666;
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .btn-upload {
+      width: 100%;
+      padding: 0.75rem;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .btn-upload:hover {
+      background: #5568d3;
+    }
+
+    .file-list {
+      margin-top: 1rem;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .file-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem;
+      background: white;
+      border-radius: 0.25rem;
+      margin-bottom: 0.5rem;
+      font-size: 0.85rem;
+    }
+
+    .file-name {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .btn-remove {
+      padding: 0.25rem 0.5rem;
+      background: #f44336;
+      color: white;
+      border: none;
+      border-radius: 0.25rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: bold;
+      transition: background 0.3s ease;
+    }
+
+    .btn-remove:hover {
+      background: #d32f2f;
     }
 
     .form-actions {
@@ -280,6 +572,7 @@ import { ProgramaDTO } from '../../core/models/programa.model';
 })
 export class ProgramaFormComponent implements OnInit {
   private programaService = inject(ProgramaService);
+  private documentoBaseService = inject(DocumentoBaseService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private fb = inject(FormBuilder);
@@ -291,6 +584,12 @@ export class ProgramaFormComponent implements OnInit {
   private programaId: number | null = null;
 
   protected programaForm: FormGroup;
+
+  // Archivos seleccionados
+  protected archivosLineamientos = signal<File[]>([]);
+  protected archivosSecciones = signal<File[]>([]);
+  protected archivosEvidencias = signal<File[]>([]);
+  protected archivosDocumentos = signal<File[]>([]);
 
   constructor() {
     this.programaForm = this.fb.group({
@@ -330,6 +629,48 @@ export class ProgramaFormComponent implements OnInit {
     });
   }
 
+  onFileSelect(event: Event, tipo: 'lineamientos' | 'secciones' | 'evidencias' | 'documentos'): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files) return;
+
+    const nuevosArchivos = Array.from(input.files);
+    
+    switch(tipo) {
+      case 'lineamientos':
+        this.archivosLineamientos.update(files => [...files, ...nuevosArchivos]);
+        break;
+      case 'secciones':
+        this.archivosSecciones.update(files => [...files, ...nuevosArchivos]);
+        break;
+      case 'evidencias':
+        this.archivosEvidencias.update(files => [...files, ...nuevosArchivos]);
+        break;
+      case 'documentos':
+        this.archivosDocumentos.update(files => [...files, ...nuevosArchivos]);
+        break;
+    }
+
+    // Reset input
+    input.value = '';
+  }
+
+  removeFile(tipo: 'lineamientos' | 'secciones' | 'evidencias' | 'documentos', fileName: string): void {
+    switch(tipo) {
+      case 'lineamientos':
+        this.archivosLineamientos.update(files => files.filter(f => f.name !== fileName));
+        break;
+      case 'secciones':
+        this.archivosSecciones.update(files => files.filter(f => f.name !== fileName));
+        break;
+      case 'evidencias':
+        this.archivosEvidencias.update(files => files.filter(f => f.name !== fileName));
+        break;
+      case 'documentos':
+        this.archivosDocumentos.update(files => files.filter(f => f.name !== fileName));
+        break;
+    }
+  }
+
   isFieldInvalid(fieldName: string): boolean {
     const field = this.programaForm.get(fieldName);
     return !!(field && field.invalid && (field.dirty || field.touched));
@@ -345,8 +686,13 @@ export class ProgramaFormComponent implements OnInit {
         : this.programaService.createPrograma(programaData);
 
       request.subscribe({
-        next: () => {
-          this.router.navigate(['/programas']);
+        next: (programa) => {
+          // Si es modo creación y hay archivos, subirlos
+          if (!this.isEditMode() && this.hayArchivos()) {
+            this.uploadDocumentos(programa.id);
+          } else {
+            this.router.navigate(['/programas']);
+          }
         },
         error: (err) => {
           console.error('Error completo:', err);
@@ -371,6 +717,61 @@ export class ProgramaFormComponent implements OnInit {
         this.programaForm.get(key)?.markAsTouched();
       });
     }
+  }
+
+  private hayArchivos(): boolean {
+    return this.archivosLineamientos().length > 0 ||
+           this.archivosSecciones().length > 0 ||
+           this.archivosEvidencias().length > 0 ||
+           this.archivosDocumentos().length > 0;
+  }
+
+  private uploadDocumentos(programaId: number): void {
+    const uploads: any[] = [];
+
+    // Subir lineamientos
+    this.archivosLineamientos().forEach(file => {
+      uploads.push(
+        this.documentoBaseService.uploadDocumento(programaId, file, TipoDocumentoBase.LINEAMIENTO)
+      );
+    });
+
+    // Subir secciones
+    this.archivosSecciones().forEach(file => {
+      uploads.push(
+        this.documentoBaseService.uploadDocumento(programaId, file, TipoDocumentoBase.SECCION)
+      );
+    });
+
+    // Subir evidencias
+    this.archivosEvidencias().forEach(file => {
+      uploads.push(
+        this.documentoBaseService.uploadDocumento(programaId, file, TipoDocumentoBase.EVIDENCIA)
+      );
+    });
+
+    // Subir documentos base
+    this.archivosDocumentos().forEach(file => {
+      uploads.push(
+        this.documentoBaseService.uploadDocumento(programaId, file, TipoDocumentoBase.DOCUMENTO_BASE)
+      );
+    });
+
+    if (uploads.length === 0) {
+      this.router.navigate(['/programas']);
+      return;
+    }
+
+    forkJoin(uploads).subscribe({
+      next: () => {
+        this.router.navigate(['/programas']);
+      },
+      error: (err) => {
+        console.error('Error uploading files:', err);
+        alert('Programa creado, pero hubo errores al subir algunos documentos');
+        this.router.navigate(['/programas']);
+      }
+    });
   }
 
   onCancel(): void {
