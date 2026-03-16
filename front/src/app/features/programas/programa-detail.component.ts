@@ -1,5 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject, signal, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ProgramaService } from '../../core/services/programa.service';
 import { DocumentoBaseService } from '../../core/services/documento-base.service';
 import { LineamientoService } from '../../core/services/lineamiento.service';
@@ -20,7 +21,10 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
         </div>
       } @else if (error()) {
         <div class="error-card">
-          <h2>❌ Error</h2>
+          <h2>
+            <svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            Error
+          </h2>
           <p>{{ error() }}</p>
           <button class="btn btn-secondary" (click)="goBack()">Volver</button>
         </div>
@@ -40,10 +44,12 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
           </div>
           <div class="header-actions">
             <button class="btn btn-secondary" (click)="onEdit()">
-              ✏️ Editar
+              <svg class="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+              Editar
             </button>
             <button class="btn btn-danger" (click)="onDelete()">
-              🗑️ Eliminar
+              <svg class="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+              Eliminar
             </button>
           </div>
         </div>
@@ -53,7 +59,10 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
           <!-- Información General -->
           <div class="info-card">
             <div class="card-header">
-              <h2>📋 Información General</h2>
+              <h2>
+                <svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+                Información General
+              </h2>
             </div>
             <div class="card-body">
               <div class="info-row">
@@ -82,7 +91,10 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
           <!-- Lineamientos del Decreto 1330 -->
           <div class="lineamientos-card">
             <div class="card-header">
-              <h2>📋 Lineamientos del Decreto 1330 de 2019</h2>
+              <h2>
+                <svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                Lineamientos del Decreto 1330 de 2019
+              </h2>
               <span class="lineamientos-count">9 lineamientos</span>
             </div>
             <div class="card-body">
@@ -92,12 +104,14 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
                     class="lineamiento-card"
                     (click)="verLineamiento(lineamiento.numero)"
                     [style.border-left-color]="lineamiento.color">
-                    <div class="lineamiento-icon">{{ lineamiento.icono }}</div>
+                    <div class="lineamiento-icon" [innerHTML]="getLineamientoIconoSvg(lineamiento.numero)"></div>
                     <div class="lineamiento-content">
                       <div class="lineamiento-numero">Lineamiento {{ lineamiento.numero }}</div>
                       <div class="lineamiento-nombre">{{ lineamiento.nombre }}</div>
                     </div>
-                    <div class="lineamiento-arrow">→</div>
+                    <div class="lineamiento-arrow">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </div>
                   </button>
                 }
               </div>
@@ -147,6 +161,10 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
     .error-card h2 {
       color: #d32f2f;
       margin: 0 0 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
     }
 
     .header-card {
@@ -233,6 +251,15 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
       cursor: pointer;
       transition: all 0.3s ease;
       white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .btn-icon-svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
     }
 
     .btn-secondary {
@@ -297,6 +324,15 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
       font-size: 1.2rem;
       color: #333;
       font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .title-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
     }
 
     .doc-count {
@@ -498,9 +534,16 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
     }
 
     .lineamiento-icon {
-      font-size: 2.5rem;
       min-width: 50px;
-      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #667eea;
+    }
+
+    .lineamiento-icon svg {
+      width: 30px;
+      height: 30px;
     }
 
     .lineamiento-content {
@@ -524,9 +567,15 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
     }
 
     .lineamiento-arrow {
-      font-size: 1.5rem;
       color: #667eea;
-      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .lineamiento-arrow svg {
+      width: 18px;
+      height: 18px;
     }
 
     @media (max-width: 768px) {
@@ -548,6 +597,7 @@ export class ProgramaDetailComponent implements OnInit {
   private programaService = inject(ProgramaService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private sanitizer = inject(DomSanitizer);
 
   protected programa = signal<ProgramaDTO | null>(null);
   protected loading = signal(true);
@@ -611,5 +661,21 @@ export class ProgramaDetailComponent implements OnInit {
   verLineamiento(numeroLineamiento: number): void {
     if (!this.programa()) return;
     this.router.navigate(['/programas', this.programa()!.id, 'lineamiento', numeroLineamiento]);
+  }
+
+  getLineamientoIconoSvg(numero: number): SafeHtml {
+    const iconos: Record<number, string> = {
+      1: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`,
+      2: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`,
+      3: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
+      4: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+      5: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>`,
+      6: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+      7: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
+      8: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
+      9: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`
+    };
+
+    return this.sanitizer.bypassSecurityTrustHtml(iconos[numero] ?? iconos[1]);
   }
 }

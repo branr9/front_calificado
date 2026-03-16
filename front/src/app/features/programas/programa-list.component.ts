@@ -50,21 +50,21 @@ import { ProgramaDTO } from '../../core/models/programa.model';
                       (click)="onView(programa.id)"
                       type="button"
                       [attr.aria-label]="'Ver programa ' + programa.nombre">
-                      👁️
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
                     </button>
                     <button 
                       class="btn-action btn-edit" 
                       (click)="onEdit(programa.id)"
                       type="button"
                       [attr.aria-label]="'Editar programa ' + programa.nombre">
-                      ✏️
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
                     </button>
                     <button 
                       class="btn-action btn-delete" 
                       (click)="onDelete(programa.id, programa.nombre)"
                       type="button"
                       [attr.aria-label]="'Eliminar programa ' + programa.nombre">
-                      🗑️
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                     </button>
                   </td>
                 </tr>
@@ -193,9 +193,22 @@ import { ProgramaDTO } from '../../core/models/programa.model';
       border: none;
       background: transparent;
       cursor: pointer;
-      font-size: 1.2rem;
+      width: 34px;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       transition: transform 0.2s ease;
     }
+
+    .btn-action svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .btn-view { color: #4b5563; }
+    .btn-edit { color: #f97316; }
+    .btn-delete { color: #9ca3af; }
 
     .btn-action:hover {
       transform: scale(1.2);

@@ -1,9 +1,10 @@
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { AuthService } from '../../core/services/auth.service';
 
 interface MenuItem {
-  icon: string;
+  icon: SafeHtml;
   label: string;
   route: string;
 }
@@ -18,7 +19,7 @@ interface MenuItem {
       <aside class="sidebar">
         <div class="sidebar-header">
           <div class="logo">
-            <span class="logo-icon">📋</span>
+            <span class="logo-icon" [innerHTML]="logoIcon"></span>
             <div class="logo-content">
               <div class="logo-title">Registro Calificado</div>
               <div class="logo-subtitle">Decreto 1330 de 2019</div>
@@ -36,7 +37,7 @@ interface MenuItem {
                 routerLinkActive="active"
                 class="nav-item"
                 [attr.aria-label]="item.label">
-                <span class="nav-icon">{{ item.icon }}</span>
+                <span class="nav-icon" [innerHTML]="item.icon"></span>
                 <span class="nav-label">{{ item.label }}</span>
               </a>
             }
@@ -61,7 +62,7 @@ interface MenuItem {
             class="logout-btn" 
             (click)="onLogout()"
             type="button">
-            <span class="nav-icon">🚪</span>
+            <span class="nav-icon" [innerHTML]="logoutIcon"></span>
             <span class="nav-label">Cerrar Sesión</span>
           </button>
         </div>
@@ -106,7 +107,14 @@ interface MenuItem {
     }
 
     .logo-icon {
-      font-size: 2.5rem;
+      width: 42px;
+      height: 42px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffd56c;
+      flex-shrink: 0;
+      line-height: 0;
     }
 
     .logo-content {
@@ -180,10 +188,14 @@ interface MenuItem {
     }
 
     .nav-icon {
-      font-size: 1.3rem;
       min-width: 28px;
+      width: 28px;
+      height: 28px;
       display: flex;
       justify-content: center;
+      align-items: center;
+      opacity: 0.95;
+      line-height: 0;
     }
 
     .nav-label {
@@ -306,11 +318,32 @@ interface MenuItem {
 export class LayoutComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private sanitizer = inject(DomSanitizer);
+
+  protected logoIcon = this.svg(
+    '<svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="2" width="18" height="20" rx="2" ry="2"/><line x1="9" y1="6" x2="15" y2="6"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="9" y1="14" x2="15" y2="14"/><line x1="9" y1="18" x2="13" y2="18"/></svg>'
+  );
+
+  protected logoutIcon = this.svg(
+    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>'
+  );
 
   protected menuPrincipal: MenuItem[] = [
-    { icon: '📊', label: 'Dashboard', route: '/dashboard' },
-    { icon: '�', label: 'Programas', route: '/programas' }
+    {
+      icon: this.svg('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>'),
+      label: 'Dashboard',
+      route: '/dashboard'
+    },
+    {
+      icon: this.svg('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="7" rx="1"/><rect x="14" y="4" width="7" height="7" rx="1"/><rect x="14" y="13" width="7" height="7" rx="1"/><rect x="3" y="13" width="7" height="7" rx="1"/></svg>'),
+      label: 'Programas',
+      route: '/programas'
+    }
   ];
+
+  private svg(markup: string): SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(markup);
+  }
 
 
   onLogout(): void {
