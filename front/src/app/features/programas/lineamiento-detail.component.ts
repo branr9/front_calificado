@@ -1,5 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject, signal, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ProgramaService } from '../../core/services/programa.service';
 import { EvidenciaService } from '../../core/services/evidencia.service';
 import { DocumentoBaseService } from '../../core/services/documento-base.service';
@@ -22,7 +23,10 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
         </div>
       } @else if (error()) {
         <div class="error-card">
-          <h2>❌ Error</h2>
+          <h2>
+            <svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            Error
+          </h2>
           <p>{{ error() }}</p>
           <button class="btn btn-secondary" (click)="goBack()">Volver</button>
         </div>
@@ -32,9 +36,13 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
           <div class="header-content">
             <button class="btn-back" (click)="goBack()">← Volver al Programa</button>
             <div class="lineamiento-badge">LINEAMIENTO {{ numeroLineamiento() }}</div>
-            <h1>{{ getLineamientoNombre() }}</h1>
+            <h1>
+              <span class="lineamiento-title-icon" [innerHTML]="getLineamientoIconoSvg(numeroLineamiento())"></span>
+              {{ getLineamientoNombre() }}
+            </h1>
             <div class="programa-info">
-              📚 {{ programa()?.nombre }}
+              <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              {{ programa()?.nombre }}
             </div>
           </div>
         </div>
@@ -44,12 +52,15 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
           <!-- Subir Evidencias -->
           <div class="upload-section">
             <div class="section-header">
-              <h2>📎 Evidencias del Lineamiento</h2>
+              <h2>
+                <svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.2-9.19a4 4 0 0 1 5.65 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                Evidencias del Lineamiento
+              </h2>
               <span class="count-badge">{{ evidencias().length }} archivo(s)</span>
             </div>
             <div class="section-body">
               <div class="upload-zone" (click)="evidenciasInput.click()">
-                <div class="upload-icon">📤</div>
+                <div class="upload-icon" [innerHTML]="getSectionIconSvg('upload')"></div>
                 <div class="upload-text">
                   <strong>Subir Evidencias</strong>
                   <p>Arrastra archivos PDF o haz clic para seleccionar</p>
@@ -75,7 +86,7 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
                   @for (evidencia of evidencias(); track evidencia.id) {
                     <div class="file-row">
                       <div class="file-info">
-                        <span class="file-icon">📄</span>
+                        <span class="file-icon" [innerHTML]="getSectionIconSvg('file')"></span>
                         <span class="file-name">{{ evidencia.nombreArchivoOriginal }}</span>
                       </div>
                       <span class="file-size">{{ formatBytes(evidencia.tamanoBytes) }}</span>
@@ -85,13 +96,13 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
                           class="btn-icon btn-download"
                           (click)="downloadEvidencia(evidencia.id)"
                           title="Descargar">
-                          ⬇️
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                         </button>
                         <button
                           class="btn-icon btn-delete"
                           (click)="deleteEvidencia(evidencia.id)"
                           title="Eliminar">
-                          🗑️
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                         </button>
                       </div>
                     </div>
@@ -99,7 +110,7 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
                 </div>
               } @else {
                 <div class="empty-state">
-                  <div class="empty-icon">📭</div>
+                  <div class="empty-icon" [innerHTML]="getSectionIconSvg('empty')"></div>
                   <p>No hay evidencias cargadas</p>
                   <p class="empty-hint">Las evidencias son documentos que respaldan este lineamiento</p>
                 </div>
@@ -110,12 +121,15 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
           <!-- Subir Documentos Base -->
           <div class="upload-section">
             <div class="section-header">
-              <h2>📄 Documentos Base para IA</h2>
+              <h2>
+                <svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                Documentos Base para IA
+              </h2>
               <span class="count-badge">{{ documentosBase().length }} archivo(s)</span>
             </div>
             <div class="section-body">
               <div class="upload-zone" (click)="documentosInput.click()">
-                <div class="upload-icon">🤖</div>
+                <div class="upload-icon" [innerHTML]="getSectionIconSvg('ai')"></div>
                 <div class="upload-text">
                   <strong>Subir Documentos para IA</strong>
                   <p>PDFs que la IA usará para generar contenido</p>
@@ -141,7 +155,7 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
                   @for (doc of documentosBase(); track doc.id) {
                     <div class="file-row">
                       <div class="file-info">
-                        <span class="file-icon">📄</span>
+                        <span class="file-icon" [innerHTML]="getSectionIconSvg('file')"></span>
                         <span class="file-name">{{ doc.nombreArchivo }}</span>
                       </div>
                       <span class="file-size">{{ formatBytes(doc.tamanoBytes) }}</span>
@@ -151,13 +165,13 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
                           class="btn-icon btn-download"
                           (click)="downloadDocumento(doc.id!)"
                           title="Descargar">
-                          ⬇️
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                         </button>
                         <button
                           class="btn-icon btn-delete"
                           (click)="deleteDocumento(doc.id!)"
                           title="Eliminar">
-                          🗑️
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                         </button>
                       </div>
                     </div>
@@ -165,7 +179,7 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
                 </div>
               } @else {
                 <div class="empty-state">
-                  <div class="empty-icon">🤖</div>
+                  <div class="empty-icon" [innerHTML]="getSectionIconSvg('ai')"></div>
                   <p>No hay documentos base cargados</p>
                   <p class="empty-hint">Estos documentos alimentan la IA para generar contenido</p>
                 </div>
@@ -222,6 +236,21 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
       text-align: center;
     }
 
+    .error-card h2 {
+      color: #d32f2f;
+      margin: 0 0 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .title-icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
     .header-card {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
@@ -263,11 +292,35 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
       font-size: 2rem;
       margin: 0 0 0.5rem;
       font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .lineamiento-title-icon {
+      width: 28px;
+      height: 28px;
+      color: white;
+      display: inline-flex;
+    }
+
+    .lineamiento-title-icon :is(svg) {
+      width: 100%;
+      height: 100%;
     }
 
     .programa-info {
       font-size: 1rem;
       opacity: 0.95;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .meta-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
     }
 
     .content-grid {
@@ -297,6 +350,9 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
       font-size: 1.2rem;
       color: #333;
       font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
     .count-badge {
@@ -329,7 +385,15 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
     }
 
     .upload-icon {
-      font-size: 3rem;
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 1rem;
+      color: #667eea;
+    }
+
+    .upload-icon :is(svg) {
+      width: 100%;
+      height: 100%;
       margin-bottom: 1rem;
     }
 
@@ -391,7 +455,16 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
     }
 
     .file-icon {
-      font-size: 1.5rem;
+      width: 20px;
+      height: 20px;
+      display: inline-flex;
+      color: #667eea;
+      flex-shrink: 0;
+    }
+
+    .file-icon :is(svg) {
+      width: 100%;
+      height: 100%;
     }
 
     .file-name {
@@ -419,9 +492,18 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
       border: none;
       background: transparent;
       cursor: pointer;
-      font-size: 1.2rem;
       border-radius: 0.25rem;
       transition: all 0.2s ease;
+      width: 34px;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-icon svg {
+      width: 18px;
+      height: 18px;
     }
 
     .btn-icon:hover {
@@ -442,9 +524,16 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
     }
 
     .empty-icon {
-      font-size: 4rem;
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 1rem;
       margin-bottom: 1rem;
       opacity: 0.5;
+    }
+
+    .empty-icon :is(svg) {
+      width: 100%;
+      height: 100%;
     }
 
     .empty-state p {
@@ -524,6 +613,7 @@ export class LineamientoDetailComponent implements OnInit {
   private evidenciaService = inject(EvidenciaService);
   private documentoBaseService = inject(DocumentoBaseService);
   private lineamientoService = inject(LineamientoService);
+  private sanitizer = inject(DomSanitizer);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
@@ -732,7 +822,34 @@ export class LineamientoDetailComponent implements OnInit {
 
   getLineamientoNombre(): string {
     const lin = this.LINEAMIENTOS.find(l => l.numero === this.numeroLineamiento());
-    return lin ? `${lin.icono} ${lin.nombre}` : '';
+    return lin ? lin.nombre : '';
+  }
+
+  getLineamientoIconoSvg(numero: number): SafeHtml {
+    const iconos: Record<number, string> = {
+      1: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`,
+      2: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`,
+      3: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
+      4: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+      5: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>`,
+      6: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+      7: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
+      8: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
+      9: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`
+    };
+
+    return this.sanitizer.bypassSecurityTrustHtml(iconos[numero] ?? iconos[1]);
+  }
+
+  getSectionIconSvg(tipo: 'upload' | 'file' | 'empty' | 'ai'): SafeHtml {
+    const iconos = {
+      upload: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`,
+      file: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`,
+      empty: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12H2"/><path d="M5.45 5.11L2 12l3.45 6.89A2 2 0 0 0 7.24 20h9.52a2 2 0 0 0 1.79-1.11L22 12l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>`,
+      ai: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>`
+    };
+
+    return this.sanitizer.bypassSecurityTrustHtml(iconos[tipo]);
   }
 
   getLineamientoColor(): string {

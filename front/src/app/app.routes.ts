@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { roleGuard } from './core/guards/role.guard';
 
 export const routes: Routes = [
   {
@@ -52,8 +53,10 @@ export const routes: Routes = [
       },
       {
         path: 'usuarios',
+        canActivate: [roleGuard],
+        data: { title: 'Usuarios', icon: '👥', roles: ['ADMINISTRADOR'] },
         loadComponent: () => import('./features/placeholder/placeholder.component').then(m => m.PlaceholderComponent),
-        data: { title: 'Usuarios', icon: '👥' }
+      
       },
       {
         path: 'configuracion',

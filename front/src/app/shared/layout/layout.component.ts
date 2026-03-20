@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { AuthService } from '../../core/services/auth.service';
@@ -31,7 +31,7 @@ interface MenuItem {
           <!-- Sección Principal -->
           <div class="nav-section">
             <div class="section-title">PRINCIPAL</div>
-            @for (item of menuPrincipal; track item.route) {
+            @for (item of menuPrincipal(); track item.route) {
               <a 
                 [routerLink]="item.route"
                 routerLinkActive="active"
@@ -328,18 +328,30 @@ export class LayoutComponent {
     '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>'
   );
 
-  protected menuPrincipal: MenuItem[] = [
-    {
-      icon: this.svg('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>'),
-      label: 'Dashboard',
-      route: '/dashboard'
-    },
-    {
-      icon: this.svg('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="7" rx="1"/><rect x="14" y="4" width="7" height="7" rx="1"/><rect x="14" y="13" width="7" height="7" rx="1"/><rect x="3" y="13" width="7" height="7" rx="1"/></svg>'),
-      label: 'Programas',
-      route: '/programas'
+  protected menuPrincipal = computed<MenuItem[]>(() => {
+    const baseMenu: MenuItem[] = [
+      {
+        icon: this.svg('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>'),
+        label: 'Dashboard',
+        route: '/dashboard'
+      },
+      {
+        icon: this.svg('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="7" rx="1"/><rect x="14" y="4" width="7" height="7" rx="1"/><rect x="14" y="13" width="7" height="7" rx="1"/><rect x="3" y="13" width="7" height="7" rx="1"/></svg>'),
+        label: 'Programas',
+        route: '/programas'
+      }
+    ];
+
+    if (this.authService.hasRole('ADMINISTRADOR')) {
+      baseMenu.push({
+        icon: this.svg('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6"/><path d="M23 11h-6"/></svg>'),
+        label: 'Usuarios',
+        route: '/usuarios'
+      });
     }
-  ];
+
+    return baseMenu;
+  });
 
   private svg(markup: string): SafeHtml {
     return this.sanitizer.bypassSecurityTrustHtml(markup);
