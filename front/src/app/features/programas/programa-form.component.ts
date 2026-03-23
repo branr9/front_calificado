@@ -10,6 +10,7 @@ import { forkJoin } from 'rxjs';
 @Component({
   selector: 'app-programa-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
   imports: [ReactiveFormsModule],
   template: `
     <div class="container">

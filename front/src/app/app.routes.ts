@@ -18,7 +18,24 @@ export const routes: Routes = [
       },
       {
         path: 'programas',
-        loadComponent: () => import('./features/programas/programa-list.component').then(m => m.ProgramaListComponent)
+        children: [
+          {
+            path: '',
+            loadComponent: () => import('./features/programas/programa-list.component').then(m => m.ProgramaListComponent)
+          },
+          {
+            path: 'nuevo',
+            loadComponent: () => import('./features/programas/programa-form.component').then(m => m.ProgramaFormComponent)
+          },
+          {
+            path: 'editar/:id',
+            loadComponent: () => import('./features/programas/programa-form.component').then(m => m.ProgramaFormComponent)
+          },
+          {
+            path: ':id',
+            loadComponent: () => import('./features/programas/programa-detail.component').then(m => m.ProgramaDetailComponent)
+          }
+        ]
       },
       {
         path: '',
