@@ -11,6 +11,7 @@ interface MenuItem {
 
 @Component({
   selector: 'app-layout',
+  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterOutlet, RouterLink, RouterLinkActive],
   template: `

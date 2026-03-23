@@ -1,0 +1,35 @@
+<div class="login-container">
+  <div class="login-card">
+    <h1>Sistema de Acreditación Académica</h1>
+    <p class="subtitle">Gestión de Programas Académicos</p>
+
+    <form [formGroup]="form" (ngSubmit)="onLogin()" class="login-form">
+      <label class="field-label" for="username">Usuario o correo</label>
+      <input
+        id="username"
+        type="text"
+        class="field"
+        formControlName="username"
+        autocomplete="username"
+      />
+
+      <label class="field-label" for="password">Contraseña</label>
+      <input
+        id="password"
+        type="password"
+        class="field"
+        formControlName="password"
+        autocomplete="current-password"
+      />
+
+      <p *ngIf="errorMessage()" class="error-message">{{ errorMessage() }}</p>
+
+      <button
+        class="btn-login"
+        [disabled]="form.invalid || loading()"
+        type="submit">
+        {{ loading() ? 'Ingresando...' : 'Iniciar sesión' }}
+      </button>
+    </form>
+  </div>
+</div>

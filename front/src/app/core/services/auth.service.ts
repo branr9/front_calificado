@@ -2,9 +2,11 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, map, tap } from 'rxjs';
+import { isPlatformBrowser } from '@angular/common';
+import { PLATFORM_ID } from '@angular/core';
 import { environment } from '../config/environment';
 
-export type UserRole = 'ADMINISTRADOR' | 'FUNCIONARIO';
+export type UserRole = string;
 
 export interface LoginRequest {
   username: string;
@@ -15,12 +17,15 @@ interface LoginResponse {
   token?: string;
   accessToken?: string;
   jwt?: string;
+  tokenType?: string;
+  permisos?: string[];
   user?: {
     id: number;
     username: string;
     email?: string;
     nombreCompleto?: string;
     rol: UserRole;
+    permisos?: string[];
   };
   usuario?: {
     id: number;
@@ -28,9 +33,11 @@ interface LoginResponse {
     email?: string;
     nombreCompleto?: string;
     rol: UserRole;
+    permisos?: string[];
   };
   rol?: UserRole;
   username?: string;
+  email?: string;
   nombreCompleto?: string;
 }
 
@@ -40,6 +47,7 @@ export interface AuthUser {
   email?: string;
   nombreCompleto?: string;
   rol: UserRole;
+  permisos?: string[];
 }
 
 @Injectable({
@@ -48,6 +56,8 @@ export interface AuthUser {
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
+  private platformId = inject(PLATFORM_ID);
+
   private tokenSignal = signal<string | null>(null);
   private userSignal = signal<AuthUser | null>(null);
 
@@ -57,10 +67,12 @@ export class AuthService {
 
   private readonly tokenStorageKey = 'rc_token';
   private readonly userStorageKey = 'rc_user';
-  private readonly loginEndpoint = `${environment.apiUrl}/api/auth/login`;
+  private readonly loginEndpoint = `${environment.apiUrl}/api/auth/login` || '/api/auth/login';
 
   constructor() {
-    this.restoreSession();
+    if (isPlatformBrowser(this.platformId)) {
+      this.restoreSession();
+    }
   }
 
   login(credentials: LoginRequest): Observable<void> {
@@ -85,24 +97,29 @@ export class AuthService {
 
   private normalizeAuth(response: LoginResponse): { token: string | null; user: AuthUser } {
     const token = response.token ?? response.accessToken ?? response.jwt ?? null;
-    const userFromPayload = response.user ?? response.usuario;
 
-    const role = userFromPayload?.rol ?? response.rol;
-    if (!role) {
-      throw new Error('La respuesta de autenticacion no incluye rol.');
+    const userFromPayload = response.user ?? response.usuario;
+    const roleFromPayload = userFromPayload?.rol ?? response.rol;
+    const usernameFromPayload = userFromPayload?.username ?? response.username;
+    const emailFromPayload = userFromPayload?.email ?? response.email;
+    const permisosFromPayload = userFromPayload?.permisos ?? response.permisos;
+
+    if (!roleFromPayload) {
+      throw new Error('La respuesta de autenticación no incluye rol.');
+    }
+
+    if (!usernameFromPayload) {
+      throw new Error('La respuesta de autenticación no incluye username.');
     }
 
     const user: AuthUser = {
       id: userFromPayload?.id ?? 0,
-      username: userFromPayload?.username ?? response.username ?? '',
-      email: userFromPayload?.email,
+      username: usernameFromPayload,
+      email: emailFromPayload,
       nombreCompleto: userFromPayload?.nombreCompleto ?? response.nombreCompleto,
-      rol: role
+      rol: roleFromPayload,
+      permisos: permisosFromPayload
     };
-
-    if (!user.username) {
-      throw new Error('La respuesta de autenticacion no incluye username.');
-    }
 
     return { token, user };
   }
@@ -110,6 +127,10 @@ export class AuthService {
   private persistSession(token: string | null, user: AuthUser): void {
     this.tokenSignal.set(token);
     this.userSignal.set(user);
+
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
 
     if (token) {
       localStorage.setItem(this.tokenStorageKey, token);
@@ -121,15 +142,17 @@ export class AuthService {
   }
 
   private restoreSession(): void {
+    const storedToken = localStorage.getItem(this.tokenStorageKey);
     const storedUser = localStorage.getItem(this.userStorageKey);
-    if (!storedUser) {
+
+    if (!storedUser || !storedToken) {
       return;
     }
 
     try {
       const parsedUser = JSON.parse(storedUser) as AuthUser;
       this.userSignal.set(parsedUser);
-      this.tokenSignal.set(localStorage.getItem(this.tokenStorageKey));
+      this.tokenSignal.set(storedToken);
     } catch {
       this.clearSession();
     }
@@ -138,6 +161,11 @@ export class AuthService {
   private clearSession(): void {
     this.tokenSignal.set(null);
     this.userSignal.set(null);
+
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+
     localStorage.removeItem(this.tokenStorageKey);
     localStorage.removeItem(this.userStorageKey);
   }
