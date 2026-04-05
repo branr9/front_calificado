@@ -5,9 +5,11 @@ import { ProgramaService } from '../../core/services/programa.service';
 import { EvidenciaService } from '../../core/services/evidencia.service';
 import { DocumentoBaseService } from '../../core/services/documento-base.service';
 import { LineamientoService } from '../../core/services/lineamiento.service';
+import { LineamientoTextoService } from '../../core/services/lineamiento-texto.service';
 import { ProgramaDTO } from '../../core/models/programa.model';
 import { EvidenciaDTO } from '../../core/models/evidencia.model';
 import { DocumentoBaseDTO, TipoDocumentoBase } from '../../core/models/evidencia.model';
+import { LineamientoTextoDTO } from '../../core/models/lineamiento-texto.model';
 import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lineamiento.model';
 
 @Component({
@@ -184,6 +186,61 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
                   <p class="empty-hint">Estos documentos alimentan la IA para generar contenido</p>
                 </div>
               }
+            </div>
+          </div>
+
+          <!-- Redacción asistida por IA -->
+          <div class="upload-section">
+            <div class="section-header">
+              <h2>
+                <svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+                Redacción del lineamiento con IA
+              </h2>
+            </div>
+            <div class="section-body ia-editor">
+              <div>
+                <label class="ia-hint">
+                  Escribe o ajusta aquí el texto final de este lineamiento.
+                </label>
+                <textarea
+                  class="ia-textarea"
+                  [value]="textoLineamiento()"
+                  (input)="onTextareaInput($event)"
+                  placeholder="Redacta aquí el contenido del lineamiento, apoyándote en los documentos subidos y en las respuestas de la IA..."
+                ></textarea>
+              </div>
+
+              <div class="ia-prompt-row">
+                <input
+                  type="text"
+                  class="ia-prompt-input"
+                  [value]="promptIA()"
+                  (input)="onInputInput($event)"
+                  placeholder="Indica a la IA qué quieres que mejore, resuma o genere (por ejemplo: 'redacta una versión más formal de este párrafo')"
+                />
+                <button
+                  class="btn btn-primary"
+                  type="button"
+                  (click)="onGenerarConIA()"
+                  [disabled]="generandoIA()"
+                >
+                  {{ generandoIA() ? 'Consultando IA...' : 'Pedir sugerencia a la IA' }}
+                </button>
+              </div>
+
+              <div class="ia-actions">
+                <span class="ia-hint">
+                  Cuando estés conforme con el texto, guárdalo para este lineamiento.
+                </span>
+                <button
+                  class="btn btn-secondary"
+                  type="button"
+                  (click)="onGuardarTexto()"
+                  [disabled]="guardandoTexto()"
+                >
+                  {{ guardandoTexto() ? 'Guardando...' : 'Guardar lineamiento' }}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -366,6 +423,64 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
 
     .section-body {
       padding: 1.5rem;
+    }
+
+    .ia-editor {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .ia-textarea {
+      width: 100%;
+      min-height: 220px;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      border: 1px solid #d1d5db;
+      font-size: 0.95rem;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    .ia-textarea:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 1px rgba(102, 126, 234, 0.3);
+    }
+
+    .ia-prompt-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .ia-prompt-input {
+      flex: 1;
+      min-width: 200px;
+      padding: 0.6rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+      font-size: 0.9rem;
+    }
+
+    .ia-prompt-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 1px rgba(102, 126, 234, 0.3);
+    }
+
+    .ia-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: flex-end;
+      margin-top: 0.5rem;
+    }
+
+    .ia-hint {
+      font-size: 0.8rem;
+      color: #6b7280;
     }
 
     .upload-zone {
@@ -613,6 +728,7 @@ export class LineamientoDetailComponent implements OnInit {
   private evidenciaService = inject(EvidenciaService);
   private documentoBaseService = inject(DocumentoBaseService);
   private lineamientoService = inject(LineamientoService);
+  private lineamientoTextoService = inject(LineamientoTextoService);
   private sanitizer = inject(DomSanitizer);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -624,18 +740,31 @@ export class LineamientoDetailComponent implements OnInit {
   protected loading = signal(true);
   protected uploading = signal(false);
   protected error = signal<string | null>(null);
+  protected textoLineamiento = signal<string>('');
+  protected promptIA = signal<string>('');
+  protected generandoIA = signal(false);
+  protected guardandoTexto = signal(false);
 
   private lineamientoId: number | null = null;
   protected readonly LINEAMIENTOS = LINEAMIENTOS_DECRETO_1330;
 
   ngOnInit(): void {
-    const programaId = this.route.snapshot.paramMap.get('id');
-    const numeroLineamiento = this.route.snapshot.paramMap.get('lineamiento');
+    // Aceptar tanto los nombres de parámetros antiguos como los nuevos
+    const programaId =
+      this.route.snapshot.paramMap.get('programaId') ??
+      this.route.snapshot.paramMap.get('id');
+    const numeroLineamiento =
+      this.route.snapshot.paramMap.get('numero') ??
+      this.route.snapshot.paramMap.get('lineamiento');
 
     if (programaId && numeroLineamiento) {
-      this.numeroLineamiento.set(+numeroLineamiento);
-      this.loadPrograma(+programaId);
-      this.loadLineamientoData(+programaId, +numeroLineamiento);
+      const programaIdNum = +programaId;
+      const numeroLinNum = +numeroLineamiento;
+
+      this.numeroLineamiento.set(numeroLinNum);
+      this.loadPrograma(programaIdNum);
+      this.loadLineamientoData(programaIdNum, numeroLinNum);
+      this.loadTextoLineamiento(programaIdNum, numeroLinNum);
     } else {
       this.error.set('Parámetros inválidos');
       this.loading.set(false);
@@ -679,6 +808,19 @@ export class LineamientoDetailComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error loading documentos:', err);
+      }
+    });
+  }
+
+  loadTextoLineamiento(programaId: number, numeroLineamiento: number): void {
+    this.lineamientoTextoService.getTexto(programaId, numeroLineamiento).subscribe({
+      next: (texto: LineamientoTextoDTO | null) => {
+        if (texto?.contenido) {
+          this.textoLineamiento.set(texto.contenido);
+        }
+      },
+      error: (err) => {
+        console.error('Error loading texto de lineamiento:', err);
       }
     });
   }
@@ -756,6 +898,84 @@ export class LineamientoDetailComponent implements OnInit {
         }
       });
     });
+  }
+
+  onTextareaInput(event: Event): void {
+    const target = event.target as HTMLTextAreaElement;
+    this.onCambiarTexto(target.value);
+  }
+
+  onInputInput(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.onCambiarPrompt(target.value);
+  }
+
+  onCambiarTexto(value: string): void {
+    this.textoLineamiento.set(value);
+  }
+
+  onCambiarPrompt(value: string): void {
+    this.promptIA.set(value);
+  }
+
+  onGenerarConIA(): void {
+    if (!this.programa()) {
+      return;
+    }
+
+    const prompt = this.promptIA().trim();
+    if (!prompt) {
+      alert('Escribe primero qué quieres que la IA genere o mejore.');
+      return;
+    }
+
+    this.generandoIA.set(true);
+
+    this.lineamientoTextoService
+      .generarTexto(this.programa()!.id, this.numeroLineamiento(), {
+        prompt,
+        contenidoActual: this.textoLineamiento()
+      })
+      .subscribe({
+        next: (res) => {
+          this.textoLineamiento.set(res.contenidoSugerido);
+          this.generandoIA.set(false);
+        },
+        error: (err) => {
+          console.error('Error generando texto con IA:', err);
+          alert('No fue posible generar la respuesta de la IA.');
+          this.generandoIA.set(false);
+        }
+      });
+  }
+
+  onGuardarTexto(): void {
+    if (!this.programa()) {
+      return;
+    }
+
+    const contenido = this.textoLineamiento().trim();
+    if (!contenido) {
+      if (!confirm('El texto está vacío. ¿Quieres guardar así de todos modos?')) {
+        return;
+      }
+    }
+
+    this.guardandoTexto.set(true);
+
+    this.lineamientoTextoService
+      .guardarTexto(this.programa()!.id, this.numeroLineamiento(), contenido)
+      .subscribe({
+        next: () => {
+          this.guardandoTexto.set(false);
+          alert('Texto del lineamiento guardado correctamente.');
+        },
+        error: (err) => {
+          console.error('Error guardando texto de lineamiento:', err);
+          alert('No fue posible guardar el texto del lineamiento.');
+          this.guardandoTexto.set(false);
+        }
+      });
   }
 
   downloadEvidencia(id: number): void {

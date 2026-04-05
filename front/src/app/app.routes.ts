@@ -32,6 +32,10 @@ export const routes: Routes = [
             loadComponent: () => import('./features/programas/programa-form.component').then(m => m.ProgramaFormComponent)
           },
           {
+            path: ':programaId/lineamiento/:numero',
+            loadComponent: () => import('./features/programas/lineamiento-detail.component').then(m => m.LineamientoDetailComponent)
+          },
+          {
             path: ':id',
             loadComponent: () => import('./features/programas/programa-detail.component').then(m => m.ProgramaDetailComponent)
           }
