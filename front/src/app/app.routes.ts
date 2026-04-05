@@ -42,6 +42,23 @@ export const routes: Routes = [
         ]
       },
       {
+        path: 'usuarios',
+        children: [
+          {
+            path: '',
+            loadComponent: () => import('./features/usuarios/usuario-list.component').then(m => m.UsuarioListComponent)
+          },
+          {
+            path: 'nuevo',
+            loadComponent: () => import('./features/usuarios/usuario-form.component').then(m => m.UsuarioFormComponent)
+          },
+          {
+            path: 'editar/:id',
+            loadComponent: () => import('./features/usuarios/usuario-form.component').then(m => m.UsuarioFormComponent)
+          }
+        ]
+      },
+      {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full'
