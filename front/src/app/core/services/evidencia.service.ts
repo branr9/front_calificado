@@ -17,10 +17,8 @@ export class EvidenciaService {
 
   uploadEvidencia(lineamientoId: number, archivo: File): Observable<EvidenciaDTO> {
     const formData = new FormData();
-    formData.append('archivo', archivo);
-    formData.append('lineamientoId', lineamientoId.toString());
-    
-    return this.http.post<EvidenciaDTO>(this.apiUrl, formData);
+    formData.append('file', archivo);
+    return this.http.post<EvidenciaDTO>(`${this.apiUrl}/lineamiento/${lineamientoId}`, formData);
   }
 
   deleteEvidencia(id: number): Observable<void> {
@@ -28,7 +26,7 @@ export class EvidenciaService {
   }
 
   downloadEvidencia(id: number): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/${id}/download`, {
+    return this.http.get(`${this.apiUrl}/${id}/descargar`, {
       responseType: 'blob'
     });
   }

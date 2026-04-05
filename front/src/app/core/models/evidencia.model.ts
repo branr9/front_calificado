@@ -3,7 +3,6 @@ export interface EvidenciaDTO {
   nombreArchivoOriginal: string;
   tipoMime: string;
   tamanoBytes: number;
-  rutaAlmacenamiento: string;
   fechaSubida: string;
   lineamientoId: number;
 }

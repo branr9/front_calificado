@@ -3,9 +3,9 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ProgramaService } from '../../core/services/programa.service';
 import { ProgramaDTO } from '../../core/models/programa.model';
-import { DocumentoBaseService } from '../../core/services/documento-base.service';
-import { TipoDocumentoBase } from '../../core/models/evidencia.model';
-import { forkJoin } from 'rxjs';
+import { EvidenciaService } from '../../core/services/evidencia.service';
+import { LineamientoService } from '../../core/services/lineamiento.service';
+import { forkJoin, switchMap, of } from 'rxjs';
 
 @Component({
   selector: 'app-programa-form',
@@ -573,7 +573,8 @@ import { forkJoin } from 'rxjs';
 })
 export class ProgramaFormComponent implements OnInit {
   private programaService = inject(ProgramaService);
-  private documentoBaseService = inject(DocumentoBaseService);
+  private evidenciaService = inject(EvidenciaService);
+  private lineamientoService = inject(LineamientoService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private fb = inject(FormBuilder);
@@ -728,45 +729,34 @@ export class ProgramaFormComponent implements OnInit {
   }
 
   private uploadDocumentos(programaId: number): void {
-    const uploads: any[] = [];
+    // Fetch the 9 lineamientos auto-created with the programa, then distribute files:
+    // archivosLineamientos → lineamiento 1, archivosSecciones → lineamiento 2,
+    // archivosEvidencias  → lineamiento 3, archivosDocumentos  → lineamiento 4+
+    this.lineamientoService.getLineamientos(programaId).pipe(
+      switchMap(lineamientos => {
+        if (!lineamientos.length) return of([]);
 
-    // Subir lineamientos
-    this.archivosLineamientos().forEach(file => {
-      uploads.push(
-        this.documentoBaseService.uploadDocumento(programaId, file, TipoDocumentoBase.LINEAMIENTO)
-      );
-    });
+        const uploads: any[] = [];
 
-    // Subir secciones
-    this.archivosSecciones().forEach(file => {
-      uploads.push(
-        this.documentoBaseService.uploadDocumento(programaId, file, TipoDocumentoBase.SECCION)
-      );
-    });
+        const byIndex = (i: number) => lineamientos[Math.min(i, lineamientos.length - 1)].id;
 
-    // Subir evidencias
-    this.archivosEvidencias().forEach(file => {
-      uploads.push(
-        this.documentoBaseService.uploadDocumento(programaId, file, TipoDocumentoBase.EVIDENCIA)
-      );
-    });
+        this.archivosLineamientos().forEach(file =>
+          uploads.push(this.evidenciaService.uploadEvidencia(byIndex(0), file))
+        );
+        this.archivosSecciones().forEach(file =>
+          uploads.push(this.evidenciaService.uploadEvidencia(byIndex(1), file))
+        );
+        this.archivosEvidencias().forEach(file =>
+          uploads.push(this.evidenciaService.uploadEvidencia(byIndex(2), file))
+        );
+        this.archivosDocumentos().forEach(file =>
+          uploads.push(this.evidenciaService.uploadEvidencia(byIndex(3), file))
+        );
 
-    // Subir documentos base
-    this.archivosDocumentos().forEach(file => {
-      uploads.push(
-        this.documentoBaseService.uploadDocumento(programaId, file, TipoDocumentoBase.DOCUMENTO_BASE)
-      );
-    });
-
-    if (uploads.length === 0) {
-      this.router.navigate(['/programas']);
-      return;
-    }
-
-    forkJoin(uploads).subscribe({
-      next: () => {
-        this.router.navigate(['/programas']);
-      },
+        return uploads.length ? forkJoin(uploads) : of([]);
+      })
+    ).subscribe({
+      next: () => this.router.navigate(['/programas']),
       error: (err) => {
         console.error('Error uploading files:', err);
         alert('Programa creado, pero hubo errores al subir algunos documentos');
