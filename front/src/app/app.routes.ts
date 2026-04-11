@@ -36,6 +36,10 @@ export const routes: Routes = [
             loadComponent: () => import('./features/programas/lineamiento-detail.component').then(m => m.LineamientoDetailComponent)
           },
           {
+            path: ':programaId/lineamiento/:numero/componente/:componente',
+            loadComponent: () => import('./features/programas/lineamiento-detail.component').then(m => m.LineamientoDetailComponent)
+          },
+          {
             path: ':id',
             loadComponent: () => import('./features/programas/programa-detail.component').then(m => m.ProgramaDetailComponent)
           }

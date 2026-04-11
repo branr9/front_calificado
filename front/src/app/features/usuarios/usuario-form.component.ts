@@ -36,7 +36,6 @@ import { UsuarioDTO, CreateUsuarioDTO, UpdateUsuarioDTO } from '../../core/model
                 type="text"
                 formControlName="username"
                 placeholder="Ej: jdoe"
-                [disabled]="isEditMode()"
                 [class.invalid]="isFieldInvalid('username')"
               />
               @if (isFieldInvalid('username')) {
@@ -405,11 +404,11 @@ export class UsuarioFormComponent implements OnInit {
 
   private initForm(): void {
     this.usuarioForm = this.fb.group({
-      username: ['', [Validators.required]],
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.minLength(8)]],
-      nombreCompleto: ['', Validators.required],
-      rol: ['', Validators.required],
+      username: [{value: '', disabled: false}, [Validators.required]],
+      email: [{value: '', disabled: false}, [Validators.required, Validators.email]],
+      password: [{value: '', disabled: false}, [Validators.minLength(8)]],
+      nombreCompleto: [{value: '', disabled: false}, Validators.required],
+      rol: [{value: '', disabled: false}, Validators.required],
       activo: [true]
     });
   }
@@ -425,8 +424,11 @@ export class UsuarioFormComponent implements OnInit {
         this.usuarioForm.get('password')?.setValidators([]);
         this.usuarioForm.get('password')?.updateValueAndValidity();
         
-        // Username no es editable
-        this.usuarioForm.get('username')?.disable();
+        // Username no es editable - usar disable() apropiadamente
+        const usernameControl = this.usuarioForm.get('username');
+        if (usernameControl) {
+          usernameControl.disable({emitEvent: false});
+        }
       } else {
         // En creación, la contraseña es requerida
         this.usuarioForm.get('password')?.setValidators([
@@ -483,6 +485,8 @@ export class UsuarioFormComponent implements OnInit {
         activo: formData.activo
       };
 
+      console.log('📤 UPDATE data enviado:', JSON.stringify(updateData, null, 2));
+
       this.usuarioService.updateUsuario(this.usuarioId, updateData).subscribe({
         next: () => {
           this.saving.set(false);
@@ -504,6 +508,8 @@ export class UsuarioFormComponent implements OnInit {
         rol: formData.rol
       };
 
+      console.log('📤 CREATE data enviado:', JSON.stringify(createData, null, 2));
+
       this.usuarioService.createUsuario(createData).subscribe({
         next: () => {
           this.saving.set(false);
@@ -512,7 +518,8 @@ export class UsuarioFormComponent implements OnInit {
         error: (err) => {
           this.error.set('Error al crear el usuario');
           this.saving.set(false);
-          console.error('Error creating usuario:', err);
+          console.error('❌ Error creando usuario:', err);
+          console.error('Full error object:', err);
         }
       });
     }

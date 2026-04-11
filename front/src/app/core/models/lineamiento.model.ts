@@ -9,6 +9,14 @@ export interface LineamientoDTO {
   programaId: number;
 }
 
+export interface ComponenteCondicion3 {
+  letra: 'A' | 'B' | 'C' | 'D' | 'E';
+  nombre: string;
+  descripcion: string;
+  icono: string;
+  color: string;
+}
+
 export interface ProgresoRegistroDTO {
   programaId: number;
   lineamientosCompletados: number;
@@ -30,56 +38,94 @@ export enum EstadoDocumentoRegistro {
 export const LINEAMIENTOS_DECRETO_1330 = [
   {
     numero: 1,
-    nombre: 'Naturaleza y características',
+    nombre: 'Denominación del programa',
     icono: '📚',
     color: '#667eea'
   },
   {
     numero: 2,
-    nombre: 'Acceso y admisión',
+    nombre: 'Justificación del programa',
     icono: '🎓',
     color: '#764ba2'
   },
   {
     numero: 3,
-    nombre: 'Administración académica',
+    nombre: 'Aspectos curriculares',
     icono: '✨',
     color: '#f093fb'
   },
   {
     numero: 4,
-    nombre: 'Profesores',
+    nombre: 'Organización de actividades académicas y proceso formativo',
     icono: '👨‍🏫',
     color: '#4facfe'
   },
   {
     numero: 5,
-    nombre: 'Procesos académicos',
+    nombre: 'Investigación, innovación y/o creación artística y cultural',
     icono: '$',
     color: '#43e97b'
   },
   {
     numero: 6,
-    nombre: 'Infraestructura',
+    nombre: 'Relación con el sector externo',
     icono: '🏗️',
     color: '#fa709a'
   },
   {
     numero: 7,
-    nombre: 'Bienestar institucional',
+    nombre: 'Profesores',
     icono: '❤️',
     color: '#fee140'
   },
   {
     numero: 8,
-    nombre: 'Investigación',
+    nombre: 'Medios educativos',
     icono: '🔬',
     color: '#30cfd0'
   },
   {
     numero: 9,
-    nombre: 'Extensión',
+    nombre: 'Infraestructura física y tecnológica',
     icono: '🤝',
     color: '#a8edea'
+  }
+];
+
+export const COMPONENTES_CONDICION_3: ComponenteCondicion3[] = [
+  {
+    letra: 'A',
+    nombre: 'Componentes normativos',
+    descripcion: 'Elementos normativos del programa',
+    icono: '📋',
+    color: '#667eea'
+  },
+  {
+    letra: 'B',
+    nombre: 'Componentes pedagógicos',
+    descripcion: 'Estrategias y métodos pedagógicos',
+    icono: '🎓',
+    color: '#764ba2'
+  },
+  {
+    letra: 'C',
+    nombre: 'Componentes de interacción',
+    descripcion: 'Elementos de interacción educativa',
+    icono: '🔗',
+    color: '#f093fb'
+  },
+  {
+    letra: 'D',
+    nombre: 'Conceptualización teórica y epistemológica',
+    descripcion: 'Fundamentos teóricos del programa',
+    icono: '🧠',
+    color: '#4facfe'
+  },
+  {
+    letra: 'E',
+    nombre: 'Mecanismos de evaluación',
+    descripcion: 'Procesos y herramientas de evaluación',
+    icono: '✓',
+    color: '#43e97b'
   }
 ];

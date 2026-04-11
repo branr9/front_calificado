@@ -10,7 +10,7 @@ import { ProgramaDTO } from '../../core/models/programa.model';
 import { EvidenciaDTO } from '../../core/models/evidencia.model';
 import { DocumentoBaseDTO, TipoDocumentoBase } from '../../core/models/evidencia.model';
 import { LineamientoTextoDTO } from '../../core/models/lineamiento-texto.model';
-import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lineamiento.model';
+import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330, COMPONENTES_CONDICION_3, ComponenteCondicion3 } from '../../core/models/lineamiento.model';
 
 @Component({
   selector: 'app-lineamiento-detail',
@@ -21,7 +21,7 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
       @if (loading()) {
         <div class="loading">
           <div class="spinner"></div>
-          <p>Cargando lineamiento...</p>
+          <p>Cargando condición...</p>
         </div>
       } @else if (error()) {
         <div class="error-card">
@@ -36,11 +36,25 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
         <!-- Header -->
         <div class="header-card" [style.background]="getLineamientoColor()">
           <div class="header-content">
-            <button class="btn-back" (click)="goBack()">← Volver al Programa</button>
-            <div class="lineamiento-badge">LINEAMIENTO {{ numeroLineamiento() }}</div>
+            @if (componenteSeleccionado()) {
+              <button class="btn-back" (click)="volverAComponentes()">← Volver a Componentes</button>
+            } @else {
+              <button class="btn-back" (click)="goBack()">← Volver al Programa</button>
+            }
+            <div class="lineamiento-badge">
+              @if (componenteSeleccionado()) {
+                COMPONENTE {{ componenteSeleccionado() }}
+              } @else {
+                CONDICIÓN {{ numeroLineamiento() }}
+              }
+            </div>
             <h1>
               <span class="lineamiento-title-icon" [innerHTML]="getLineamientoIconoSvg(numeroLineamiento())"></span>
-              {{ getLineamientoNombre() }}
+              @if (componenteSeleccionado()) {
+                {{ getNombreComponente(componenteSeleccionado()!) }}
+              } @else {
+                {{ getLineamientoNombre() }}
+              }
             </h1>
             <div class="programa-info">
               <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
@@ -51,12 +65,39 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
 
         <!-- Main Content -->
         <div class="content-grid">
+          <!-- Vista especial para Condición 3: Aspectos Curriculares -->
+          @if (numeroLineamiento() === 3 && !componenteSeleccionado()) {
+            <div class="componentes-condicion-3">
+              <div class="componentes-header">
+                <h2>Componentes de Aspectos Curriculares</h2>
+                <p>Selecciona un componente para ver más detalles</p>
+              </div>
+              <div class="componentes-grid">
+                @for (componente of COMPONENTES_CONDICION_3; track componente.letra) {
+                  <button 
+                    class="componente-card"
+                    (click)="verComponente(componente.letra)"
+                    [style.border-left-color]="componente.color">
+                    <div class="componente-letra" [style.background]="componente.color">{{ componente.letra }}</div>
+                    <div class="componente-content">
+                      <div class="componente-nombre">{{ componente.nombre }}</div>
+                      <div class="componente-descripcion">{{ componente.descripcion }}</div>
+                    </div>
+                    <div class="componente-arrow">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </div>
+                  </button>
+                }
+              </div>
+            </div>
+          }
+          
           <!-- Subir Evidencias -->
           <div class="upload-section">
             <div class="section-header">
               <h2>
                 <svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.2-9.19a4 4 0 0 1 5.65 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-                Evidencias del Lineamiento
+                Evidencias de la Condición
               </h2>
               <span class="count-badge">{{ evidencias().length }} archivo(s)</span>
             </div>
@@ -114,13 +155,14 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
                 <div class="empty-state">
                   <div class="empty-icon" [innerHTML]="getSectionIconSvg('empty')"></div>
                   <p>No hay evidencias cargadas</p>
-                  <p class="empty-hint">Las evidencias son documentos que respaldan este lineamiento</p>
+                  <p class="empty-hint">Las evidencias son documentos que respaldan esta condición</p>
                 </div>
               }
             </div>
           </div>
 
           <!-- Subir Documentos Base -->
+          @if (numeroLineamiento() !== 3 || componenteSeleccionado()) {
           <div class="upload-section">
             <div class="section-header">
               <h2>
@@ -188,13 +230,15 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
               }
             </div>
           </div>
+          }
 
           <!-- Redacción asistida por IA -->
+          @if (numeroLineamiento() !== 3 || componenteSeleccionado()) {
           <div class="upload-section">
             <div class="section-header">
               <h2>
                 <svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
-                Redacción del lineamiento con IA
+                Redacción de la condición con IA
               </h2>
             </div>
             <div class="section-body ia-editor">
@@ -206,7 +250,7 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
                   class="ia-textarea"
                   [value]="textoLineamiento()"
                   (input)="onTextareaInput($event)"
-                  placeholder="Redacta aquí el contenido del lineamiento, apoyándote en los documentos subidos y en las respuestas de la IA..."
+                  placeholder="Redacta aquí el contenido de la condición, apoyándote en los documentos subidos y en las respuestas de la IA..."
                 ></textarea>
               </div>
 
@@ -238,11 +282,12 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
                   (click)="onGuardarTexto()"
                   [disabled]="guardandoTexto()"
                 >
-                  {{ guardandoTexto() ? 'Guardando...' : 'Guardar lineamiento' }}
+                  {{ guardandoTexto() ? 'Guardando...' : 'Guardar condición' }}
                 </button>
               </div>
             </div>
           </div>
+          }
         </div>
 
         @if (uploading()) {
@@ -706,6 +751,101 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
       background: #5568d3;
     }
 
+    .componentes-condicion-3 {
+      grid-column: 1 / -1;
+      background: white;
+      border-radius: 0.75rem;
+      padding: 2rem;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    .componentes-header {
+      margin-bottom: 2rem;
+    }
+
+    .componentes-header h2 {
+      font-size: 1.3rem;
+      color: #333;
+      margin: 0 0 0.5rem;
+      font-weight: 700;
+    }
+
+    .componentes-header p {
+      color: #666;
+      margin: 0;
+      font-size: 0.95rem;
+    }
+
+    .componentes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .componente-card {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.25rem;
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-left: 4px solid #667eea;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: left;
+    }
+
+    .componente-card:hover {
+      border-color: #667eea;
+      background: #f5f7ff;
+      transform: translateY(-3px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+    }
+
+    .componente-letra {
+      min-width: 50px;
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.5rem;
+      color: white;
+      font-weight: 700;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+
+    .componente-content {
+      flex: 1;
+    }
+
+    .componente-nombre {
+      font-weight: 600;
+      color: #333;
+      font-size: 0.95rem;
+      line-height: 1.3;
+      margin-bottom: 0.25rem;
+    }
+
+    .componente-descripcion {
+      color: #666;
+      font-size: 0.85rem;
+      line-height: 1.3;
+    }
+
+    .componente-arrow {
+      color: #667eea;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .componente-arrow svg {
+      width: 18px;
+      height: 18px;
+    }
+
     @media (max-width: 768px) {
       .content-grid {
         grid-template-columns: 1fr;
@@ -735,6 +875,7 @@ export class LineamientoDetailComponent implements OnInit {
 
   protected programa = signal<ProgramaDTO | null>(null);
   protected numeroLineamiento = signal<number>(0);
+  protected componenteSeleccionado = signal<'A' | 'B' | 'C' | 'D' | 'E' | null>(null);
   protected evidencias = signal<EvidenciaDTO[]>([]);
   protected documentosBase = signal<DocumentoBaseDTO[]>([]);
   protected loading = signal(true);
@@ -747,6 +888,7 @@ export class LineamientoDetailComponent implements OnInit {
 
   private lineamientoId: number | null = null;
   protected readonly LINEAMIENTOS = LINEAMIENTOS_DECRETO_1330;
+  protected readonly COMPONENTES_CONDICION_3 = COMPONENTES_CONDICION_3;
 
   ngOnInit(): void {
     // Aceptar tanto los nombres de parámetros antiguos como los nuevos
@@ -756,12 +898,16 @@ export class LineamientoDetailComponent implements OnInit {
     const numeroLineamiento =
       this.route.snapshot.paramMap.get('numero') ??
       this.route.snapshot.paramMap.get('lineamiento');
+    const componente = this.route.snapshot.paramMap.get('componente') as 'A' | 'B' | 'C' | 'D' | 'E' | null;
 
     if (programaId && numeroLineamiento) {
       const programaIdNum = +programaId;
       const numeroLinNum = +numeroLineamiento;
 
       this.numeroLineamiento.set(numeroLinNum);
+      if (componente) {
+        this.componenteSeleccionado.set(componente);
+      }
       this.loadPrograma(programaIdNum);
       this.loadLineamientoData(programaIdNum, numeroLinNum);
       this.loadTextoLineamiento(programaIdNum, numeroLinNum);
@@ -1094,6 +1240,33 @@ export class LineamientoDetailComponent implements OnInit {
       hour: '2-digit',
       minute: '2-digit'
     });
+  }
+
+  verComponente(componente: 'A' | 'B' | 'C' | 'D' | 'E'): void {
+    if (!this.programa()) return;
+    this.router.navigate([
+      '/programas',
+      this.programa()!.id,
+      'lineamiento',
+      this.numeroLineamiento(),
+      'componente',
+      componente
+    ]);
+  }
+
+  volverAComponentes(): void {
+    if (!this.programa()) return;
+    this.router.navigate([
+      '/programas',
+      this.programa()!.id,
+      'lineamiento',
+      this.numeroLineamiento()
+    ]);
+  }
+
+  getNombreComponente(letra: 'A' | 'B' | 'C' | 'D' | 'E'): string {
+    const componente = COMPONENTES_CONDICION_3.find(c => c.letra === letra);
+    return componente?.nombre || `Componente ${letra}`;
   }
 
   goBack(): void {

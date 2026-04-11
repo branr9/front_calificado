@@ -93,9 +93,9 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
             <div class="card-header">
               <h2>
                 <svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-                Lineamientos del Decreto 1330 de 2019
+                Condiciones del Decreto 1330 de 2019
               </h2>
-              <span class="lineamientos-count">9 lineamientos</span>
+              <span class="lineamientos-count">9 condiciones</span>
             </div>
             <div class="card-body">
               <div class="lineamientos-grid">
@@ -106,7 +106,7 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
                     [style.border-left-color]="lineamiento.color">
                     <div class="lineamiento-icon" [innerHTML]="getLineamientoIconoSvg(lineamiento.numero)"></div>
                     <div class="lineamiento-content">
-                      <div class="lineamiento-numero">Lineamiento {{ lineamiento.numero }}</div>
+                      <div class="lineamiento-numero">Condición {{ lineamiento.numero }}</div>
                       <div class="lineamiento-nombre">{{ lineamiento.nombre }}</div>
                     </div>
                     <div class="lineamiento-arrow">
