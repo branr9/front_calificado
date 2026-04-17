@@ -28,7 +28,7 @@ import { forkJoin, switchMap, of } from 'rxjs';
           <form [formGroup]="programaForm" (ngSubmit)="onSubmit()">
             <!-- Información Básica -->
             <div class="section-title">📋 Información Básica</div>
-            
+
             <div class="form-group">
               <label for="nombre">
                 Nombre del Programa <span class="required">*</span>
@@ -267,14 +267,14 @@ import { forkJoin, switchMap, of } from 'rxjs';
             }
 
             <div class="form-actions">
-              <button 
-                type="button" 
-                class="btn btn-secondary" 
+              <button
+                type="button"
+                class="btn btn-secondary"
                 (click)="onCancel()">
                 Cancelar
               </button>
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 class="btn btn-primary"
                 [disabled]="!programaForm.valid || saving()">
                 {{ saving() ? 'Guardando...' : (isEditMode() ? 'Actualizar' : 'Crear Programa') }}
@@ -636,7 +636,7 @@ export class ProgramaFormComponent implements OnInit {
     if (!input.files) return;
 
     const nuevosArchivos = Array.from(input.files);
-    
+
     switch(tipo) {
       case 'lineamientos':
         this.archivosLineamientos.update(files => [...files, ...nuevosArchivos]);
@@ -699,7 +699,7 @@ export class ProgramaFormComponent implements OnInit {
         error: (err) => {
           console.error('Error completo:', err);
           let errorMsg = 'Error al guardar el programa';
-          
+
           if (err.status === 0) {
             errorMsg = 'No se puede conectar al servidor. Verifica que el backend esté corriendo en http://localhost:8080';
           } else if (err.status === 401 || err.status === 403) {
@@ -709,7 +709,7 @@ export class ProgramaFormComponent implements OnInit {
           } else if (err.message) {
             errorMsg = `Error: ${err.message}`;
           }
-          
+
           alert(errorMsg);
           this.saving.set(false);
         }
