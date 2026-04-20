@@ -20,10 +20,9 @@ interface MenuItem {
       <aside class="sidebar">
         <div class="sidebar-header">
           <div class="logo">
-            <span class="logo-icon" [innerHTML]="logoIcon"></span>
+            <img src="images/logouceva.png" alt="Logo UCEVA" class="logo-image" />
             <div class="logo-content">
-              <div class="logo-title">Registro Calificado</div>
-              <div class="logo-subtitle">Decreto 1330 de 2019</div>
+           
             </div>
           </div>
         </div>
@@ -107,15 +106,11 @@ interface MenuItem {
       gap: 1rem;
     }
 
-    .logo-icon {
-      width: 42px;
-      height: 42px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      color: #ffd56c;
+    .logo-image {
+      width: 200px;
+      height: auto;
+      object-fit: contain;
       flex-shrink: 0;
-      line-height: 0;
     }
 
     .logo-content {
@@ -320,10 +315,6 @@ export class LayoutComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
   private sanitizer = inject(DomSanitizer);
-
-  protected logoIcon = this.svg(
-    '<svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="2" width="18" height="20" rx="2" ry="2"/><line x1="9" y1="6" x2="15" y2="6"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="9" y1="14" x2="15" y2="14"/><line x1="9" y1="18" x2="13" y2="18"/></svg>'
-  );
 
   protected logoutIcon = this.svg(
     '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>'
