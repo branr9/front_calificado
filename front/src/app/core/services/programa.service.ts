@@ -30,4 +30,8 @@ export class ProgramaService {
   deletePrograma(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
+
+  exportarZip(id: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/${id}/exportar-zip`, { responseType: 'blob' });
+  }
 }

@@ -43,6 +43,15 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
             </div>
           </div>
           <div class="header-actions">
+            <button class="btn btn-export" (click)="onExportarZip()" [disabled]="exportando()">
+              @if (exportando()) {
+                <svg class="btn-icon-svg spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                Generando...
+              } @else {
+                <svg class="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Exportar ZIP
+              }
+            </button>
             <button class="btn btn-secondary" (click)="onEdit()">
               <svg class="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
               Editar
@@ -287,6 +296,28 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
 
     .btn-primary:hover {
       background: #5568d3;
+    }
+
+    .btn-export {
+      background: #10b981;
+      color: white;
+    }
+
+    .btn-export:hover:not(:disabled) {
+      background: #059669;
+    }
+
+    .btn-export:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .spin {
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
 
     .content-grid {
@@ -602,6 +633,7 @@ export class ProgramaDetailComponent implements OnInit {
   protected programa = signal<ProgramaDTO | null>(null);
   protected loading = signal(true);
   protected error = signal<string | null>(null);
+  protected exportando = signal(false);
 
   protected readonly LINEAMIENTOS = LINEAMIENTOS_DECRETO_1330;
 
@@ -656,6 +688,27 @@ export class ProgramaDetailComponent implements OnInit {
         }
       });
     }
+  }
+
+  onExportarZip(): void {
+    if (!this.programa()) return;
+    this.exportando.set(true);
+    this.programaService.exportarZip(this.programa()!.id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `registro_calificado_${this.programa()!.id}.zip`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        this.exportando.set(false);
+      },
+      error: (err) => {
+        console.error('Error exportando ZIP:', err);
+        alert('No se pudo generar el archivo ZIP.');
+        this.exportando.set(false);
+      }
+    });
   }
 
   verLineamiento(numeroLineamiento: number): void {
