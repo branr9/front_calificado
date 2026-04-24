@@ -34,12 +34,25 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
           <div class="header-content">
             <button class="btn-back" (click)="goBack()">← Volver</button>
             <h1>{{ programa()!.nombre }}</h1>
-            <div class="header-meta">
-              <span class="badge badge-nivel">{{ programa()!.nivel }}</span>
-              <span class="badge badge-modalidad">{{ programa()!.modalidad }}</span>
-              @if (programa()!.codigoSnies) {
-                <span class="badge badge-snies">SNIES: {{ programa()!.codigoSnies }}</span>
-              }
+            <div class="general-info">
+              <div class="info-section">
+                <div class="info-detail">
+                  <span class="info-label">ID:</span>
+                  <span class="info-value">{{ programa()!.id }}</span>
+                </div>
+                <div class="info-detail">
+                  <span class="info-label">Nivel:</span>
+                  <span class="info-value">{{ programa()!.nivel }}</span>
+                </div>
+                <div class="info-detail">
+                  <span class="info-label">Modalidad:</span>
+                  <span class="info-value">{{ programa()!.modalidad }}</span>
+                </div>
+                <div class="info-detail">
+                  <span class="info-label">Código SNIES:</span>
+                  <span class="info-value">{{ programa()!.codigoSnies || 'N/A' }}</span>
+                </div>
+              </div>
             </div>
           </div>
           <div class="header-actions">
@@ -65,38 +78,6 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
 
         <!-- Main Content -->
         <div class="content-grid">
-          <!-- Información General -->
-          <div class="info-card">
-            <div class="card-header">
-              <h2>
-                <svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
-                Información General
-              </h2>
-            </div>
-            <div class="card-body">
-              <div class="info-row">
-                <span class="info-label">ID:</span>
-                <span class="info-value">{{ programa()!.id }}</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">Nombre:</span>
-                <span class="info-value">{{ programa()!.nombre }}</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">Nivel:</span>
-                <span class="info-value">{{ programa()!.nivel }}</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">Modalidad:</span>
-                <span class="info-value">{{ programa()!.modalidad }}</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">Código SNIES:</span>
-                <span class="info-value">{{ programa()!.codigoSnies || 'N/A' }}</span>
-              </div>
-            </div>
-          </div>
-
           <!-- Lineamientos del Decreto 1330 -->
           <div class="lineamientos-card">
             <div class="card-header">
@@ -180,18 +161,31 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
       border-radius: 1rem;
-      padding: 2rem;
+      padding: 0;
       margin-bottom: 2rem;
       box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      flex-wrap: wrap;
-      gap: 1.5rem;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: stretch;
+      overflow: hidden;
+      min-height: 300px;
     }
 
     .header-content {
-      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 2rem;
+      padding-bottom: 0;
+      min-width: 300px;
+    }
+
+    .header-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      padding: 2rem;
+      align-items: stretch;
+      justify-content: flex-start;
     }
 
     .btn-back {
@@ -211,15 +205,52 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
     }
 
     h1 {
-      font-size: 2rem;
-      margin: 0 0 1rem;
+      font-size: 2.5rem;
+      margin: 0.5rem 0 1rem;
       font-weight: 700;
+      line-height: 1.2;
     }
 
     .header-meta {
       display: flex;
       gap: 0.75rem;
       flex-wrap: wrap;
+    }
+
+    .general-info {
+      margin-top: 1.5rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .info-section {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2rem;
+      padding: 2rem;
+      flex: 1;
+      align-content: center;
+    }
+
+    .info-detail {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .info-detail .info-label {
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.8);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .info-detail .info-value {
+      font-size: 1rem;
+      color: white;
+      font-weight: 600;
     }
 
     .badge {
@@ -263,6 +294,7 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
       display: inline-flex;
       align-items: center;
       gap: 0.45rem;
+      justify-content: center;
     }
 
     .btn-icon-svg {
@@ -271,36 +303,10 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
       flex-shrink: 0;
     }
 
-    .btn-secondary {
-      background: white;
-      color: #667eea;
-    }
-
-    .btn-secondary:hover {
-      background: #f0f0f0;
-    }
-
-    .btn-danger {
-      background: #f44336;
-      color: white;
-    }
-
-    .btn-danger:hover {
-      background: #d32f2f;
-    }
-
-    .btn-primary {
-      background: #667eea;
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background: #5568d3;
-    }
-
     .btn-export {
       background: #10b981;
       color: white;
+      width: 100%;
     }
 
     .btn-export:hover:not(:disabled) {
@@ -310,6 +316,26 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
     .btn-export:disabled {
       opacity: 0.6;
       cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: white;
+      color: #667eea;
+      width: 100%;
+    }
+
+    .btn-secondary:hover {
+      background: #f0f0f0;
+    }
+
+    .btn-danger {
+      background: #f44336;
+      color: white;
+      width: 100%;
+    }
+
+    .btn-danger:hover {
+      background: #d32f2f;
     }
 
     .spin {
@@ -615,7 +641,23 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
       }
 
       .header-card {
-        flex-direction: column;
+        grid-template-columns: 1fr;
+        min-height: auto;
+      }
+
+      .header-actions {
+        flex-direction: row;
+        padding: 1.5rem;
+        padding-top: 0;
+      }
+
+      .info-section {
+        grid-template-columns: repeat(2, 1fr);
+        padding: 1.5rem;
+      }
+
+      h1 {
+        font-size: 1.8rem;
       }
 
       .content-grid {
