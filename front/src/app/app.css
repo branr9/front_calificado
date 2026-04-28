@@ -1,0 +1,17 @@
+/* UCEVA Color Palette - Applied globally */
+:root {
+  --uceva-primary-dark: #005c00;
+  --uceva-primary: #006600;
+  --uceva-primary-light: #007000;
+  --uceva-accent: #007b00;
+}
+
+/* Secondary colors for UI elements */
+body {
+  --text-primary: #2c3e50;
+  --text-secondary: #7f8c8d;
+  --background-light: #f0f2f7;
+  --border-color: #cbd5e1;
+  --error-color: #b91c1c;
+  --error-background: #fef2f2;
+}

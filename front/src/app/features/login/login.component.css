@@ -3,7 +3,7 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #005c00 0%, #007b00 100%);
 }
 
 .login-card {
@@ -53,8 +53,8 @@ h1 {
 }
 
 .field:focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+  border-color: #006600;
+  box-shadow: 0 0 0 3px rgba(0, 102, 0, 0.15);
 }
 
 .error-message {
@@ -70,7 +70,7 @@ h1 {
 .btn-login {
   width: 100%;
   padding: 1rem;
-  background: #667eea;
+  background: #006600;
   color: #ffffff;
   border: none;
   border-radius: 0.5rem;
@@ -81,11 +81,11 @@ h1 {
 }
 
 .btn-login:hover {
-  background: #5568d3;
+  background: #005c00;
 }
 
 .btn-login:disabled {
-  background: #a5b4fc;
+  background: #007b00;
   cursor: not-allowed;
 }
 

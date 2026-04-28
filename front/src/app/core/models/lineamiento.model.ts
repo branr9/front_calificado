@@ -40,13 +40,13 @@ export const LINEAMIENTOS_DECRETO_1330 = [
     numero: 1,
     nombre: 'Denominación del programa',
     icono: '📚',
-    color: '#667eea'
+    color: '#006600'
   },
   {
     numero: 2,
     nombre: 'Justificación del programa',
     icono: '🎓',
-    color: '#764ba2'
+    color: '#007b00'
   },
   {
     numero: 3,
@@ -98,14 +98,14 @@ export const COMPONENTES_CONDICION_3: ComponenteCondicion3[] = [
     nombre: 'Componentes normativos',
     descripcion: 'Elementos normativos del programa',
     icono: '📋',
-    color: '#667eea'
+    color: '#006600'
   },
   {
     letra: 'B',
     nombre: 'Componentes pedagógicos',
     descripcion: 'Estrategias y métodos pedagógicos',
     icono: '🎓',
-    color: '#764ba2'
+    color: '#007b00'
   },
   {
     letra: 'C',

@@ -142,30 +142,6 @@ interface ProgramaResumen {
         </div>
       </div>
 
-      <!-- Estado de Lineamientos -->
-      <div class="section">
-        <h2 class="section-title">Estado de Lineamientos</h2>
-        <div class="lineamientos-grid">
-          @for (lineamiento of lineamientos(); track lineamiento.numero) {
-            <div 
-              class="lineamiento-card"
-              [class.completado]="lineamiento.porcentaje === 100"
-              (click)="irALineamiento(lineamiento.numero)">
-              <div class="card-icon" [style.background]="lineamiento.color" [innerHTML]="getIconoSvg(lineamiento.numero)"></div>
-              <div class="card-content">
-                <div class="card-numero">Lineamiento {{ lineamiento.numero }}</div>
-                <div class="card-nombre">{{ lineamiento.nombre }}</div>
-                <div class="card-status">
-                  <span class="status-badge" [class.active]="lineamiento.porcentaje > 0">
-                    {{ getEstado(lineamiento.porcentaje) }}
-                  </span>
-                </div>
-              </div>
-            </div>
-          }
-        </div>
-      </div>
-
       <div class="section">
         <h2 class="section-title">Avance Individual por Programa</h2>
         <div class="programas-resumen">
@@ -206,12 +182,12 @@ interface ProgramaResumen {
     }
 
     .dashboard-header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #005c00 0%, #007b00 100%);
       color: white;
       padding: 2.5rem 3rem;
       margin-bottom: 2rem;
       border-radius: 0 0 2rem 2rem;
-      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+      box-shadow: 0 10px 30px rgba(0, 92, 0, 0.2);
     }
 
     .header-content {
@@ -267,7 +243,7 @@ interface ProgramaResumen {
 
     .btn-primary {
       background: white;
-      color: #667eea;
+      color: #006600;
     }
 
     .btn-primary:hover {
@@ -340,15 +316,15 @@ interface ProgramaResumen {
     }
 
     .metric-card.completados {
-      border-left: 5px solid #9b59b6;
+      border-left: 5px solid #006600;
     }
 
     .metric-card.en-progreso {
-      border-left: 5px solid #f39c12;
+      border-left: 5px solid #007b00;
     }
 
     .metric-card.no-iniciados {
-      border-left: 5px solid #95a5a6;
+      border-left: 5px solid #005c00;
     }
 
     .metric-icon {
@@ -367,9 +343,9 @@ interface ProgramaResumen {
       height: 36px;
     }
 
-    .metric-card.completados .metric-icon { color: #9b59b6; }
-    .metric-card.en-progreso .metric-icon { color: #f39c12; }
-    .metric-card.no-iniciados .metric-icon { color: #95a5a6; }
+    .metric-card.completados .metric-icon { color: #006600; }
+    .metric-card.en-progreso .metric-icon { color: #007b00; }
+    .metric-card.no-iniciados .metric-icon { color: #005c00; }
 
     .metric-content {
       flex: 1;
@@ -413,11 +389,11 @@ interface ProgramaResumen {
       width: 120px;
       height: 120px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #005c00 0%, #007b00 100%);
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+      box-shadow: 0 4px 15px rgba(0, 92, 0, 0.3);
     }
 
     .circle-text {
@@ -433,7 +409,7 @@ interface ProgramaResumen {
     .percentage {
       font-size: 2rem;
       font-weight: 700;
-      color: #667eea;
+      color: #006600;
     }
 
     .progress-info {
@@ -492,7 +468,7 @@ interface ProgramaResumen {
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      color: #667eea;
+      color: #006600;
     }
 
     .lineamiento-icon svg {
@@ -508,7 +484,7 @@ interface ProgramaResumen {
 
     .lineamiento-porcentaje {
       font-weight: 700;
-      color: #667eea;
+      color: #006600;
     }
 
     .progress-bar-container {
@@ -522,12 +498,6 @@ interface ProgramaResumen {
       height: 100%;
       transition: width 0.5s ease;
       border-radius: 4px;
-    }
-
-    .lineamientos-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 1.5rem;
     }
 
     .programas-resumen {
@@ -560,7 +530,7 @@ interface ProgramaResumen {
 
     .programa-porcentaje {
       font-weight: 700;
-      color: #667eea;
+      color: #006600;
     }
 
     .programa-barra {
@@ -573,7 +543,7 @@ interface ProgramaResumen {
 
     .programa-barra-fill {
       height: 100%;
-      background: linear-gradient(90deg, #667eea, #764ba2);
+      background: linear-gradient(90deg, #005c00, #007b00);
       transition: width 0.4s ease;
       border-radius: 4px;
     }
@@ -617,71 +587,6 @@ interface ProgramaResumen {
       font-weight: 700;
     }
 
-    .lineamiento-card {
-      background: white;
-      border-radius: 1rem;
-      padding: 1.5rem;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .lineamiento-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-    }
-
-    .lineamiento-card.completado {
-      border: 2px solid #27ae60;
-    }
-
-    .card-icon {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 1rem;
-      color: white;
-    }
-
-    .card-icon svg {
-      width: 28px;
-      height: 28px;
-    }
-
-    .card-numero {
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: #7f8c8d;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 0.25rem;
-    }
-
-    .card-nombre {
-      font-size: 1rem;
-      font-weight: 600;
-      color: #2c3e50;
-      margin-bottom: 0.75rem;
-    }
-
-    .status-badge {
-      display: inline-block;
-      padding: 0.25rem 0.75rem;
-      border-radius: 1rem;
-      font-size: 0.75rem;
-      font-weight: 600;
-      background: #ecf0f1;
-      color: #7f8c8d;
-    }
-
-    .status-badge.active {
-      background: #d4edda;
-      color: #155724;
-    }
-
     @media (max-width: 768px) {
       .dashboard-header,
       .metrics-grid,
@@ -717,11 +622,6 @@ interface ProgramaResumen {
         width: 100%;
         min-width: 0;
       }
-
-      .institucional-value {
-        font-size: 2rem;
-      }
-    }
   `]
 })
 export class DashboardComponent implements OnInit {

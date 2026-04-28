@@ -131,7 +131,7 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
       width: 50px;
       height: 50px;
       border: 4px solid #e0e0e0;
-      border-top-color: #667eea;
+      border-top-color: #007b00;
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
@@ -158,12 +158,12 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
     }
 
     .header-card {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #005c00 0%, #007b00 100%);
       color: white;
       border-radius: 1rem;
       padding: 0;
       margin-bottom: 2rem;
-      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+      box-shadow: 0 4px 20px rgba(0, 92, 0, 0.3);
       display: grid;
       grid-template-columns: 1fr auto;
       align-items: stretch;
@@ -263,12 +263,12 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
 
     .badge-nivel {
       background: rgba(255, 255, 255, 0.9);
-      color: #667eea;
+      color: #006600;
     }
 
     .badge-modalidad {
       background: rgba(255, 255, 255, 0.9);
-      color: #764ba2;
+      color: #007b00;
     }
 
     .badge-snies {
@@ -320,7 +320,7 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
 
     .btn-secondary {
       background: white;
-      color: #667eea;
+      color: #006600;
       width: 100%;
     }
 
@@ -393,7 +393,7 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
     }
 
     .doc-count {
-      background: #667eea;
+      background: #006600;
       color: white;
       padding: 0.25rem 0.75rem;
       border-radius: 1rem;
@@ -448,7 +448,7 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
     .stat-value {
       font-size: 1.8rem;
       font-weight: 700;
-      color: #667eea;
+      color: #006600;
     }
 
     .stat-label {
@@ -499,7 +499,7 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
     }
 
     .category-count {
-      background: #667eea;
+      background: #006600;
       color: white;
       padding: 0.25rem 0.75rem;
       border-radius: 1rem;
@@ -555,7 +555,7 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
     }
 
     .lineamientos-count {
-      background: #667eea;
+      background: #006600;
       color: white;
       padding: 0.25rem 0.75rem;
       border-radius: 1rem;
@@ -576,7 +576,7 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
       padding: 1.25rem;
       background: white;
       border: 2px solid #e0e0e0;
-      border-left: 4px solid #667eea;
+      border-left: 4px solid #006600;
       border-radius: 0.5rem;
       cursor: pointer;
       transition: all 0.3s ease;
@@ -584,10 +584,10 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
     }
 
     .lineamiento-card:hover {
-      border-color: #667eea;
-      background: #f5f7ff;
+      border-color: #006600;
+      background: #f0f8f0;
       transform: translateY(-3px);
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+      box-shadow: 0 4px 12px rgba(0, 102, 0, 0.2);
     }
 
     .lineamiento-icon {
@@ -595,7 +595,7 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #667eea;
+      color: #006600;
     }
 
     .lineamiento-icon svg {
@@ -609,7 +609,7 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
 
     .lineamiento-numero {
       font-size: 0.75rem;
-      color: #667eea;
+      color: #006600;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -624,7 +624,7 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
     }
 
     .lineamiento-arrow {
-      color: #667eea;
+      color: #006600;
       display: flex;
       align-items: center;
       justify-content: center;

@@ -257,7 +257,7 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330, COMPONENTES_CONDICION_3, Com
 
     .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; gap: 1rem; }
 
-    .spinner { width: 50px; height: 50px; border: 4px solid #e0e0e0; border-top-color: #667eea; border-radius: 50%; animation: spin 1s linear infinite; }
+    .spinner { width: 50px; height: 50px; border: 4px solid #e0e0e0; border-top-color: #007b00; border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .error-card { background: #ffebee; border: 2px solid #f44336; border-radius: 0.5rem; padding: 2rem; text-align: center; }
@@ -265,12 +265,12 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330, COMPONENTES_CONDICION_3, Com
 
     .title-icon { width: 20px; height: 20px; flex-shrink: 0; }
 
-    .header-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 1rem; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3); }
+    .header-card { background: linear-gradient(135deg, #005c00 0%, #007b00 100%); color: white; border-radius: 1rem; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 4px 20px rgba(0, 92, 0, 0.3); }
 
     .btn-back { padding: 0.5rem 1rem; background: rgba(255,255,255,0.2); border: none; border-radius: 0.5rem; color: white; cursor: pointer; font-size: 0.95rem; margin-bottom: 1rem; transition: background 0.3s ease; }
     .btn-back:hover { background: rgba(255,255,255,0.3); }
 
-    .lineamiento-badge { display: inline-block; background: rgba(255,255,255,0.9); color: #667eea; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.85rem; font-weight: 700; margin-bottom: 1rem; letter-spacing: 0.5px; }
+    .lineamiento-badge { display: inline-block; background: rgba(255,255,255,0.9); color: #006600; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.85rem; font-weight: 700; margin-bottom: 1rem; letter-spacing: 0.5px; }
 
     h1 { font-size: 2rem; margin: 0 0 0.5rem; font-weight: 700; display: flex; align-items: center; gap: 0.75rem; }
 
@@ -287,7 +287,7 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330, COMPONENTES_CONDICION_3, Com
     .section-header { padding: 1.5rem; background: #f8f9fa; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; }
     .section-header h2 { margin: 0; font-size: 1.2rem; color: #333; font-weight: 700; display: inline-flex; align-items: center; gap: 0.5rem; }
 
-    .count-badge { background: #667eea; color: white; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.85rem; font-weight: 600; }
+    .count-badge { background: #006600; color: white; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.85rem; font-weight: 600; }
 
     .estado-badge { padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; }
     .estado-borrador { background: #fff3e0; color: #e65100; }
@@ -299,7 +299,7 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330, COMPONENTES_CONDICION_3, Com
     .ia-editor { display: flex; flex-direction: column; gap: 1rem; }
 
     .ia-textarea { width: 100%; min-height: 220px; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #d1d5db; font-size: 0.95rem; resize: vertical; line-height: 1.5; box-sizing: border-box; }
-    .ia-textarea:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 1px rgba(102,126,234,0.3); }
+    .ia-textarea:focus { outline: none; border-color: #006600; box-shadow: 0 0 0 1px rgba(0,102,0,0.3); }
 
     .ia-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: flex-end; margin-top: 0.5rem; }
     .ia-hint { font-size: 0.8rem; color: #6b7280; }
@@ -324,10 +324,10 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330, COMPONENTES_CONDICION_3, Com
     .ia-section ul { margin: 0; padding-left: 1.25rem; }
     .ia-section li { color: #555; font-size: 0.9rem; margin-bottom: 0.25rem; line-height: 1.4; }
 
-    .upload-zone { border: 2px dashed #667eea; border-radius: 0.75rem; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.3s ease; background: #f5f7ff; }
-    .upload-zone:hover { border-color: #5568d3; background: #eef0ff; transform: translateY(-2px); }
+    .upload-zone { border: 2px dashed #006600; border-radius: 0.75rem; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.3s ease; background: #f0f8f0; }
+    .upload-zone:hover { border-color: #005c00; background: #e8f5e9; transform: translateY(-2px); }
 
-    .upload-icon { width: 48px; height: 48px; margin: 0 auto 1rem; color: #667eea; }
+    .upload-icon { width: 48px; height: 48px; margin: 0 auto 1rem; color: #006600; }
     .upload-icon :is(svg) { width: 100%; height: 100%; margin-bottom: 1rem; }
     .upload-text strong { display: block; color: #333; font-size: 1.1rem; margin-bottom: 0.5rem; }
     .upload-text p { color: #666; font-size: 0.9rem; margin: 0; }
@@ -336,9 +336,9 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330, COMPONENTES_CONDICION_3, Com
     .files-list { margin-top: 1.5rem; }
     .list-header { display: grid; grid-template-columns: 2fr 1fr 1fr 120px; gap: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 0.5rem; font-weight: 600; font-size: 0.9rem; color: #666; margin-bottom: 0.5rem; }
     .file-row { display: grid; grid-template-columns: 2fr 1fr 1fr 120px; gap: 1rem; padding: 1rem; border: 1px solid #e0e0e0; border-radius: 0.5rem; margin-bottom: 0.5rem; align-items: center; transition: all 0.2s ease; }
-    .file-row:hover { background: #f9f9f9; border-color: #667eea; }
+    .file-row:hover { background: #f9f9f9; border-color: #006600; }
     .file-info { display: flex; align-items: center; gap: 0.75rem; }
-    .file-icon { width: 20px; height: 20px; display: inline-flex; color: #667eea; flex-shrink: 0; }
+    .file-icon { width: 20px; height: 20px; display: inline-flex; color: #006600; flex-shrink: 0; }
     .file-icon :is(svg) { width: 100%; height: 100%; }
     .file-name { font-weight: 500; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .file-size, .file-date { font-size: 0.9rem; color: #666; }
@@ -362,8 +362,8 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330, COMPONENTES_CONDICION_3, Com
 
     .btn { padding: 0.75rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-primary { background: #667eea; color: white; }
-    .btn-primary:hover:not(:disabled) { background: #5568d3; }
+    .btn-primary { background: #006600; color: white; }
+    .btn-primary:hover:not(:disabled) { background: #005c00; }
     .btn-secondary { background: #e0e0e0; color: #333; }
     .btn-secondary:hover:not(:disabled) { background: #d0d0d0; }
 
@@ -373,13 +373,13 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330, COMPONENTES_CONDICION_3, Com
     .componentes-header p { color: #666; margin: 0; font-size: 0.95rem; }
     .componentes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
 
-    .componente-card { display: flex; align-items: center; gap: 1rem; padding: 1.25rem; background: white; border: 2px solid #e0e0e0; border-left: 4px solid #667eea; border-radius: 0.5rem; cursor: pointer; transition: all 0.3s ease; text-align: left; }
-    .componente-card:hover { border-color: #667eea; background: #f5f7ff; transform: translateY(-3px); box-shadow: 0 4px 12px rgba(102,126,234,0.2); }
+    .componente-card { display: flex; align-items: center; gap: 1rem; padding: 1.25rem; background: white; border: 2px solid #e0e0e0; border-left: 4px solid #006600; border-radius: 0.5rem; cursor: pointer; transition: all 0.3s ease; text-align: left; }
+    .componente-card:hover { border-color: #006600; background: #f0f8f0; transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,102,0,0.2); }
     .componente-letra { min-width: 50px; min-height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; color: white; font-weight: 700; font-size: 1.3rem; flex-shrink: 0; }
     .componente-content { flex: 1; }
     .componente-nombre { font-weight: 600; color: #333; font-size: 0.95rem; line-height: 1.3; margin-bottom: 0.25rem; }
     .componente-descripcion { color: #666; font-size: 0.85rem; line-height: 1.3; }
-    .componente-arrow { color: #667eea; display: flex; align-items: center; justify-content: center; }
+    .componente-arrow { color: #006600; display: flex; align-items: center; justify-content: center; }
     .componente-arrow svg { width: 18px; height: 18px; }
 
     @media (max-width: 768px) {
@@ -620,7 +620,7 @@ export class LineamientoDetailComponent implements OnInit {
 
   getLineamientoColor(): string {
     const lin = this.LINEAMIENTOS.find(l => l.numero === this.numeroLineamiento());
-    return lin ? `linear-gradient(135deg, ${lin.color} 0%, #764ba2 100%)` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+    return lin ? `linear-gradient(135deg, ${lin.color} 0%, #007b00 100%)` : 'linear-gradient(135deg, #006600 0%, #007b00 100%)';
   }
 
   formatBytes(bytes: number): string {

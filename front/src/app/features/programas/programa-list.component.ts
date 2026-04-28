@@ -124,12 +124,12 @@ import { ProgramaDTO } from '../../core/models/programa.model';
     }
 
     .btn-primary {
-      background: #667eea;
+      background: #006600;
       color: white;
     }
 
     .btn-primary:hover {
-      background: #5568d3;
+      background: #005c00;
     }
 
     .table-container {
@@ -174,13 +174,13 @@ import { ProgramaDTO } from '../../core/models/programa.model';
     }
 
     .badge-nivel {
-      background: #e3f2fd;
-      color: #1976d2;
+      background: #e8f5e9;
+      color: #006600;
     }
 
     .badge-modalidad {
-      background: #f3e5f5;
-      color: #7b1fa2;
+      background: #f1f8f6;
+      color: #007b00;
     }
 
     .actions {
@@ -206,9 +206,9 @@ import { ProgramaDTO } from '../../core/models/programa.model';
       height: 18px;
     }
 
-    .btn-view { color: #4b5563; }
-    .btn-edit { color: #f97316; }
-    .btn-delete { color: #9ca3af; }
+    .btn-view { color: #006600; }
+    .btn-edit { color: #007b00; }
+    .btn-delete { color: #d32f2f; }
 
     .btn-action:hover {
       transform: scale(1.2);

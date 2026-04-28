@@ -27,7 +27,7 @@ import { forkJoin, switchMap, of } from 'rxjs';
         } @else {
           <form [formGroup]="programaForm" (ngSubmit)="onSubmit()">
             <!-- Información Básica -->
-            <div class="section-title">📋 Información Básica</div>
+            <div class="section-title"> Información Básica</div>
 
             <div class="form-group">
               <label for="nombre">
@@ -101,170 +101,7 @@ import { forkJoin, switchMap, of } from 'rxjs';
             </div>
 
             <!-- Documentos para IA -->
-            @if (!isEditMode()) {
-              <div class="section-title">🤖 Documentos para Alimentar IA</div>
-              <div class="help-banner">
-                📤 Sube los documentos PDF que servirán como base para que la IA genere contenido automático
-              </div>
-
-              <div class="upload-grid">
-                <div class="upload-card">
-                  <div class="upload-header">
-                    <div class="upload-icon">📚</div>
-                    <div>
-                      <div class="upload-title">Lineamientos</div>
-                      <div class="upload-desc">Documentos sobre los 9 lineamientos del Decreto 1330</div>
-                    </div>
-                  </div>
-                  <input
-                    type="file"
-                    accept=".pdf"
-                    multiple
-                    (change)="onFileSelect($event, 'lineamientos')"
-                    #lineamientosInput
-                    class="file-input"
-                  />
-                  <button
-                    type="button"
-                    class="btn-upload"
-                    (click)="lineamientosInput.click()">
-                    Seleccionar PDFs
-                  </button>
-                  @if (archivosLineamientos().length > 0) {
-                    <div class="file-list">
-                      @for (file of archivosLineamientos(); track file.name) {
-                        <div class="file-item">
-                          <span class="file-name">📄 {{ file.name }}</span>
-                          <button
-                            type="button"
-                            class="btn-remove"
-                            (click)="removeFile('lineamientos', file.name)">
-                            ✕
-                          </button>
-                        </div>
-                      }
-                    </div>
-                  }
-                </div>
-
-                <div class="upload-card">
-                  <div class="upload-header">
-                    <div class="upload-icon">📝</div>
-                    <div>
-                      <div class="upload-title">Secciones</div>
-                      <div class="upload-desc">Documentos con detalles de secciones específicas</div>
-                    </div>
-                  </div>
-                  <input
-                    type="file"
-                    accept=".pdf"
-                    multiple
-                    (change)="onFileSelect($event, 'secciones')"
-                    #seccionesInput
-                    class="file-input"
-                  />
-                  <button
-                    type="button"
-                    class="btn-upload"
-                    (click)="seccionesInput.click()">
-                    Seleccionar PDFs
-                  </button>
-                  @if (archivosSecciones().length > 0) {
-                    <div class="file-list">
-                      @for (file of archivosSecciones(); track file.name) {
-                        <div class="file-item">
-                          <span class="file-name">📄 {{ file.name }}</span>
-                          <button
-                            type="button"
-                            class="btn-remove"
-                            (click)="removeFile('secciones', file.name)">
-                            ✕
-                          </button>
-                        </div>
-                      }
-                    </div>
-                  }
-                </div>
-
-                <div class="upload-card">
-                  <div class="upload-header">
-                    <div class="upload-icon">📎</div>
-                    <div>
-                      <div class="upload-title">Evidencias</div>
-                      <div class="upload-desc">Documentos de soporte y evidencias</div>
-                    </div>
-                  </div>
-                  <input
-                    type="file"
-                    accept=".pdf"
-                    multiple
-                    (change)="onFileSelect($event, 'evidencias')"
-                    #evidenciasInput
-                    class="file-input"
-                  />
-                  <button
-                    type="button"
-                    class="btn-upload"
-                    (click)="evidenciasInput.click()">
-                    Seleccionar PDFs
-                  </button>
-                  @if (archivosEvidencias().length > 0) {
-                    <div class="file-list">
-                      @for (file of archivosEvidencias(); track file.name) {
-                        <div class="file-item">
-                          <span class="file-name">📄 {{ file.name }}</span>
-                          <button
-                            type="button"
-                            class="btn-remove"
-                            (click)="removeFile('evidencias', file.name)">
-                            ✕
-                          </button>
-                        </div>
-                      }
-                    </div>
-                  }
-                </div>
-
-                <div class="upload-card">
-                  <div class="upload-header">
-                    <div class="upload-icon">📄</div>
-                    <div>
-                      <div class="upload-title">Documentos Base</div>
-                      <div class="upload-desc">Otros documentos de referencia</div>
-                    </div>
-                  </div>
-                  <input
-                    type="file"
-                    accept=".pdf"
-                    multiple
-                    (change)="onFileSelect($event, 'documentos')"
-                    #documentosInput
-                    class="file-input"
-                  />
-                  <button
-                    type="button"
-                    class="btn-upload"
-                    (click)="documentosInput.click()">
-                    Seleccionar PDFs
-                  </button>
-                  @if (archivosDocumentos().length > 0) {
-                    <div class="file-list">
-                      @for (file of archivosDocumentos(); track file.name) {
-                        <div class="file-item">
-                          <span class="file-name">📄 {{ file.name }}</span>
-                          <button
-                            type="button"
-                            class="btn-remove"
-                            (click)="removeFile('documentos', file.name)">
-                            ✕
-                          </button>
-                        </div>
-                      }
-                    </div>
-                  }
-                </div>
-              </div>
-            }
+           
 
             <div class="form-actions">
               <button
@@ -334,7 +171,7 @@ import { forkJoin, switchMap, of } from 'rxjs';
       color: #333;
       margin: 2rem 0 1rem;
       padding-bottom: 0.5rem;
-      border-bottom: 2px solid #667eea;
+      border-bottom: 2px solid #006600;
     }
 
     .help-banner {
@@ -379,7 +216,7 @@ import { forkJoin, switchMap, of } from 'rxjs';
 
     input:focus, select:focus {
       outline: none;
-      border-color: #667eea;
+      border-color: #006600;
     }
 
     input.invalid, select.invalid {
@@ -416,8 +253,8 @@ import { forkJoin, switchMap, of } from 'rxjs';
     }
 
     .upload-card:hover {
-      border-color: #667eea;
-      background: #f5f7ff;
+      border-color: #006600;
+      background: #f0f8f0;
     }
 
     .upload-header {
@@ -448,7 +285,7 @@ import { forkJoin, switchMap, of } from 'rxjs';
     .btn-upload {
       width: 100%;
       padding: 0.75rem;
-      background: #667eea;
+      background: #006600;
       color: white;
       border: none;
       border-radius: 0.5rem;
@@ -459,7 +296,7 @@ import { forkJoin, switchMap, of } from 'rxjs';
     }
 
     .btn-upload:hover {
-      background: #5568d3;
+      background: #005c00;
     }
 
     .file-list {
@@ -522,12 +359,12 @@ import { forkJoin, switchMap, of } from 'rxjs';
     }
 
     .btn-primary {
-      background: #667eea;
+      background: #006600;
       color: white;
     }
 
     .btn-primary:hover:not(:disabled) {
-      background: #5568d3;
+      background: #005c00;
     }
 
     .btn-primary:disabled {

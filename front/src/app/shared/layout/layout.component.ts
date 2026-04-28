@@ -83,7 +83,7 @@ interface MenuItem {
 
     .sidebar {
       width: 280px;
-      background: linear-gradient(180deg, #5b4cdb 0%, #7c5ce0 50%, #9370db 100%);
+      background: linear-gradient(180deg, #005c00 0%, #006600 50%, #007b00 100%);
       color: white;
       display: flex;
       flex-direction: column;
@@ -92,7 +92,7 @@ interface MenuItem {
       left: 0;
       top: 0;
       z-index: 1000;
-      box-shadow: 4px 0 20px rgba(91, 76, 219, 0.15);
+      box-shadow: 4px 0 20px rgba(0, 92, 0, 0.15);
     }
 
     .sidebar-header {

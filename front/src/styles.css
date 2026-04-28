@@ -19,6 +19,14 @@ button {
 
 /* Accessibility focus styles */
 *:focus-visible {
-  outline: 3px solid #667eea;
+  outline: 3px solid #007b00;
   outline-offset: 2px;
+}
+
+/* UCEVA Color Palette */
+:root {
+  --uceva-primary-dark: #005c00;
+  --uceva-primary: #006600;
+  --uceva-primary-light: #007000;
+  --uceva-accent: #007b00;
 }
