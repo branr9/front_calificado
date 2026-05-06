@@ -203,12 +203,15 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330, COMPONENTES_CONDICION_3, Com
 
               <!-- AI review result -->
               @if (iaResult()) {
-                <div class="ia-result" [class]="'ia-result--' + iaResult()!.nivelRiesgo.toLowerCase()">
+                <div class="ia-result" [class]="getIaResultClass()">
                   <div class="ia-result-header">
-                    <span class="riesgo-badge riesgo-{{ iaResult()!.nivelRiesgo.toLowerCase() }}">
+                    <span class="riesgo-badge" [class]="getRiskBadgeClass()">
                       Riesgo {{ iaResult()!.nivelRiesgo }}
                     </span>
-                    <span class="ia-result-title">Resultado de revisión IA</span>
+                    <span class="ia-result-title">{{ iaResult()!.insufficientContext ? 'No hay contexto suficiente para revisar la sección' : 'Resultado de revisión IA' }}</span>
+                    @if (iaResult()!.cacheHit) {
+                      <span class="cache-chip">Resultado desde cache</span>
+                    }
                   </div>
 
                   <p class="ia-observaciones">{{ iaResult()!.observacionesGenerales }}</p>
@@ -234,6 +237,48 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330, COMPONENTES_CONDICION_3, Com
                       </ul>
                     </div>
                   }
+
+                  @if ((iaResult()!.citas ?? []).length > 0) {
+                    <details class="ia-section ia-citations">
+                      <summary>Citas y evidencias usadas ({{ iaResult()!.citas.length }})</summary>
+                      <div class="citation-list">
+                        @for (cita of iaResult()!.citas; track cita.chunkId) {
+                          <div class="citation-item">
+                            <div class="citation-meta">
+                              <strong>{{ cita.sourceName || 'Fuente IA' }}</strong>
+                              @if (cita.pageStart) {
+                                <span>{{ formatPageRange(cita.pageStart, cita.pageEnd) }}</span>
+                              }
+                              <span>{{ shortenId(cita.chunkId) }}</span>
+                            </div>
+                            <blockquote>{{ cita.quote }}</blockquote>
+                          </div>
+                        }
+                      </div>
+                    </details>
+                  }
+
+                  @if (iaResult()!.insufficientContext && iaResult()!.retrievalDiagnostics) {
+                    <div class="ia-section diagnostics-panel">
+                      <strong>Diagnóstico de recuperación:</strong>
+                      <div class="metadata-grid">
+                        <span>Candidatos crudos</span><strong>{{ iaResult()!.retrievalDiagnostics!.rawResultsFound }}</strong>
+                        <span>Sobre umbral</span><strong>{{ iaResult()!.retrievalDiagnostics!.resultsAfterThreshold }}</strong>
+                        <span>Umbral</span><strong>{{ formatNumber(iaResult()!.retrievalDiagnostics!.threshold) }}</strong>
+                        <span>Máxima similitud</span><strong>{{ formatNumber(iaResult()!.retrievalDiagnostics!.maxSimilarity) }}</strong>
+                      </div>
+                    </div>
+                  }
+
+                  <details class="ia-section ia-metadata">
+                    <summary>Metadata de auditoría</summary>
+                    <div class="metadata-grid">
+                      <span>Modelo</span><strong>{{ iaResult()!.modeloUsado || 'N/D' }}</strong>
+                      <span>Costo estimado</span><strong>{{ formatUsd(iaResult()!.costoEstimadoUsd) }}</strong>
+                      <span>Cache</span><strong>{{ iaResult()!.cacheHit ? 'Sí' : 'No' }}</strong>
+                      <span>OpenAI llamado</span><strong>{{ iaResult()!.aiCalled ? 'Sí' : 'No' }}</strong>
+                    </div>
+                  </details>
                 </div>
               }
             </div>
@@ -309,6 +354,7 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330, COMPONENTES_CONDICION_3, Com
     .ia-result--bajo { border-left-color: #4caf50; background: #f1f8f1; }
     .ia-result--medio { border-left-color: #ff9800; background: #fff8f0; }
     .ia-result--alto { border-left-color: #f44336; background: #fff5f5; }
+    .ia-result--sin-contexto { border-left-color: #f59e0b; background: #fffbeb; }
 
     .ia-result-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
     .ia-result-title { font-weight: 700; color: #333; font-size: 0.95rem; }
@@ -317,12 +363,24 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330, COMPONENTES_CONDICION_3, Com
     .riesgo-bajo { background: #c8e6c9; color: #1b5e20; }
     .riesgo-medio { background: #ffe0b2; color: #bf360c; }
     .riesgo-alto { background: #ffcdd2; color: #b71c1c; }
+    .riesgo-sin-contexto { background: #fef3c7; color: #92400e; }
+    .cache-chip { background: #e0f2fe; color: #075985; border-radius: 999px; padding: 0.2rem 0.55rem; font-size: 0.75rem; font-weight: 700; }
 
     .ia-observaciones { color: #555; font-size: 0.95rem; margin: 0 0 0.75rem; line-height: 1.5; }
     .ia-section { margin-top: 0.75rem; }
     .ia-section strong { display: block; color: #333; font-size: 0.9rem; margin-bottom: 0.4rem; }
     .ia-section ul { margin: 0; padding-left: 1.25rem; }
     .ia-section li { color: #555; font-size: 0.9rem; margin-bottom: 0.25rem; line-height: 1.4; }
+    .ia-section summary { cursor: pointer; color: #333; font-weight: 700; font-size: 0.9rem; margin-bottom: 0.5rem; }
+    .citation-list { display: flex; flex-direction: column; gap: 0.75rem; }
+    .citation-item { background: rgba(255,255,255,0.7); border: 1px solid #e0e0e0; border-radius: 0.5rem; padding: 0.75rem; }
+    .citation-meta { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; color: #666; font-size: 0.78rem; margin-bottom: 0.4rem; }
+    .citation-meta strong { display: inline; margin: 0; font-size: 0.82rem; color: #333; }
+    .citation-meta span { background: #f1f5f9; border-radius: 999px; padding: 0.15rem 0.45rem; }
+    .citation-item blockquote { margin: 0; color: #444; font-size: 0.88rem; line-height: 1.45; border-left: 3px solid #006600; padding-left: 0.75rem; }
+    .metadata-grid { display: grid; grid-template-columns: minmax(110px, auto) 1fr; gap: 0.35rem 0.75rem; font-size: 0.86rem; color: #555; }
+    .metadata-grid strong { display: inline; margin: 0; font-size: 0.86rem; }
+    .diagnostics-panel { background: rgba(245, 158, 11, 0.08); border-radius: 0.5rem; padding: 0.75rem; }
 
     .upload-zone { border: 2px dashed #006600; border-radius: 0.75rem; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.3s ease; background: #f0f8f0; }
     .upload-zone:hover { border-color: #005c00; background: #e8f5e9; transform: translateY(-2px); }
@@ -636,6 +694,41 @@ export class LineamientoDetailComponent implements OnInit {
       year: 'numeric', month: 'short', day: 'numeric',
       hour: '2-digit', minute: '2-digit'
     });
+  }
+
+  shortenId(id: string | undefined): string {
+    if (!id) return 'chunk N/D';
+    return `chunk ${id.slice(0, 8)}`;
+  }
+
+  formatUsd(value: number | undefined): string {
+    if (value === undefined || value === null) return 'N/D';
+    return `$${value.toFixed(6)} USD`;
+  }
+
+  formatNumber(value: number | undefined): string {
+    if (value === undefined || value === null) return 'N/D';
+    return value.toFixed(3);
+  }
+
+  getIaResultClass(): string {
+    const result = this.iaResult();
+    if (!result) return 'ia-result';
+    if (result.insufficientContext || result.nivelRiesgo === 'SIN_CONTEXTO') return 'ia-result ia-result--sin-contexto';
+    return `ia-result ia-result--${result.nivelRiesgo.toLowerCase()}`;
+  }
+
+  getRiskBadgeClass(): string {
+    const result = this.iaResult();
+    if (!result) return 'riesgo-badge';
+    if (result.insufficientContext || result.nivelRiesgo === 'SIN_CONTEXTO') return 'riesgo-badge riesgo-sin-contexto';
+    return `riesgo-badge riesgo-${result.nivelRiesgo.toLowerCase()}`;
+  }
+
+  formatPageRange(pageStart: number | undefined, pageEnd: number | undefined): string {
+    if (!pageStart) return 'Pág. N/D';
+    if (pageEnd && pageEnd !== pageStart) return `Pág. ${pageStart}-${pageEnd}`;
+    return `Pág. ${pageStart}`;
   }
 
   verComponente(componente: 'A' | 'B' | 'C' | 'D' | 'E'): void {
