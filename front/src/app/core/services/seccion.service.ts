@@ -8,7 +8,6 @@ import { ActualizarSeccionRequest, IaRevisionResultDTO, SeccionDTO } from '../mo
 export class SeccionService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/api/secciones`;
-  private registroCalificadoUrl = `${environment.apiUrl}/api/registro-calificado`;
 
   getByLineamiento(lineamientoId: number): Observable<SeccionDTO[]> {
     return this.http.get<SeccionDTO[]>(`${this.apiUrl}/lineamiento/${lineamientoId}`);
@@ -24,6 +23,6 @@ export class SeccionService {
   }
 
   revisarConIA(id: number): Observable<IaRevisionResultDTO> {
-    return this.http.post<IaRevisionResultDTO>(`${this.registroCalificadoUrl}/secciones/${id}/ia/revisar`, {});
+    return this.http.post<IaRevisionResultDTO>(`${this.apiUrl}/${id}/ia/revision`, {});
   }
 }

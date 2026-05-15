@@ -622,6 +622,7 @@ interface ProgramaResumen {
         width: 100%;
         min-width: 0;
       }
+    }
   `]
 })
 export class DashboardComponent implements OnInit {

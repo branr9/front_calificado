@@ -7,4 +7,4 @@ RUN npm ci --legacy-peer-deps
 COPY . .
 
 EXPOSE 4200
-CMD ["node_modules/.bin/ng", "serve", "--host", "0.0.0.0", "--proxy-config", "proxy.conf.docker.json"]
+CMD ["npx", "ng", "serve", "--host", "0.0.0.0", "--port", "4200", "--proxy-config", "proxy.conf.docker.json"]
