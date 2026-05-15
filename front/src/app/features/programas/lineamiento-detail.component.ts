@@ -392,15 +392,15 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330, COMPONENTES_CONDICION_3, Com
     .file-input { display: none; }
 
     .files-list { margin-top: 1.5rem; }
-    .list-header { display: grid; grid-template-columns: 2fr 1fr 1fr 120px; gap: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 0.5rem; font-weight: 600; font-size: 0.9rem; color: #666; margin-bottom: 0.5rem; }
-    .file-row { display: grid; grid-template-columns: 2fr 1fr 1fr 120px; gap: 1rem; padding: 1rem; border: 1px solid #e0e0e0; border-radius: 0.5rem; margin-bottom: 0.5rem; align-items: center; transition: all 0.2s ease; }
+    .list-header { display: grid; grid-template-columns: 1fr auto auto auto; gap: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 0.5rem; font-weight: 600; font-size: 0.9rem; color: #666; margin-bottom: 0.5rem; align-items: center; }
+    .file-row { display: grid; grid-template-columns: 1fr auto auto auto; gap: 1rem; padding: 1rem; border: 1px solid #e0e0e0; border-radius: 0.5rem; margin-bottom: 0.5rem; align-items: center; transition: all 0.2s ease; }
     .file-row:hover { background: #f9f9f9; border-color: #006600; }
-    .file-info { display: flex; align-items: center; gap: 0.75rem; }
+    .file-info { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
     .file-icon { width: 20px; height: 20px; display: inline-flex; color: #006600; flex-shrink: 0; }
     .file-icon :is(svg) { width: 100%; height: 100%; }
-    .file-name { font-weight: 500; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .file-size, .file-date { font-size: 0.9rem; color: #666; }
-    .file-actions { display: flex; gap: 0.5rem; justify-content: flex-end; }
+    .file-name { font-weight: 500; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
+    .file-size, .file-date { font-size: 0.9rem; color: #666; white-space: nowrap; padding: 0 0.5rem; }
+    .file-actions { display: flex; gap: 0.5rem; justify-content: flex-end; flex-shrink: 0; }
 
     .btn-icon { padding: 0.5rem; border: none; background: transparent; cursor: pointer; border-radius: 0.25rem; transition: all 0.2s ease; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; }
     .btn-icon svg { width: 18px; height: 18px; }
