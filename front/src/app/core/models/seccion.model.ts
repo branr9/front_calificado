@@ -5,15 +5,26 @@ export interface SeccionDTO {
   documentoId: number;
   lineamientoId: number;
   codigoSeccion: string;
+  titulo: string;
+  orden?: number;
   contenidoRedactado: string;
   observaciones: string;
   estado: EstadoSeccion;
 }
 
 export interface ActualizarSeccionRequest {
-  contenidoRedactado: string;
-  observaciones: string;
+  codigoSeccion?: string;
+  titulo?: string;
+  orden?: number;
+  contenidoRedactado?: string;
+  observaciones?: string;
   estado: EstadoSeccion;
+}
+
+export interface CrearSeccionRequest {
+  codigoSeccion: string;
+  titulo: string;
+  orden?: number;
 }
 
 export interface IaRevisionResultDTO {
@@ -57,4 +68,30 @@ export interface IaCandidateSimilarityDTO {
   lineamiento?: number;
   documentType: string;
   similarity: number;
+}
+
+export type RecomendarTextoMode = 'CREATE' | 'IMPROVE';
+
+export interface RecomendarTextoRequest {
+  mode?: RecomendarTextoMode;
+  userInstruction?: string;
+}
+
+export interface RecomendarTextoUsedContextItem {
+  tipo: 'CONDITION' | 'SECTION' | 'ATTACHMENT' | 'PROGRAM' | 'NORMATIVE';
+  nombre: string;
+}
+
+export interface RecomendarTextoResponse {
+  suggestedTitle?: string | null;
+  suggestedText: string;
+  rationale: string;
+  usedContext: RecomendarTextoUsedContextItem[];
+  warnings: string[];
+  modeUsed: RecomendarTextoMode;
+  modeloUsado?: string | null;
+  costoEstimadoUsd?: number | null;
+  cacheHit?: boolean;
+  aiCalled?: boolean;
+  insufficientContext?: boolean;
 }

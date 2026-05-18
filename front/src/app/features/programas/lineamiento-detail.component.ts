@@ -1,196 +1,213 @@
-import { Component, ChangeDetectionStrategy, inject, signal, OnInit } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { ProgramaService } from '../../core/services/programa.service';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { switchMap } from 'rxjs';
 import { EvidenciaService } from '../../core/services/evidencia.service';
 import { LineamientoService } from '../../core/services/lineamiento.service';
+import { ProgramaService } from '../../core/services/programa.service';
 import { SeccionService } from '../../core/services/seccion.service';
-import { ProgramaDTO } from '../../core/models/programa.model';
 import { EvidenciaDTO } from '../../core/models/evidencia.model';
-import { IaRevisionResultDTO } from '../../core/models/seccion.model';
-import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330, COMPONENTES_CONDICION_3, ComponenteCondicion3 } from '../../core/models/lineamiento.model';
+import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lineamiento.model';
+import { ProgramaDTO } from '../../core/models/programa.model';
+import {
+  ActualizarSeccionRequest,
+  EstadoSeccion,
+  IaRevisionResultDTO,
+  RecomendarTextoMode,
+  RecomendarTextoResponse,
+  SeccionDTO
+} from '../../core/models/seccion.model';
 
 @Component({
   selector: 'app-lineamiento-detail',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="container">
       @if (loading()) {
         <div class="loading">
           <div class="spinner"></div>
-          <p>Cargando condición...</p>
+          <p>Cargando condicion...</p>
         </div>
       } @else if (error()) {
         <div class="error-card">
-          <h2>
-            <svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-            Error
-          </h2>
+          <h2>Error</h2>
           <p>{{ error() }}</p>
-          <button class="btn btn-secondary" (click)="goBack()">Volver</button>
+          <button class="btn btn-secondary" type="button" (click)="goBack()">Volver</button>
         </div>
       } @else {
-        <!-- Header -->
-        <div class="header-card" [style.background]="getLineamientoColor()">
-          <div class="header-content">
-            @if (componenteSeleccionado()) {
-              <button class="btn-back" (click)="volverAComponentes()">← Volver a Componentes</button>
-            } @else {
-              <button class="btn-back" (click)="goBack()">← Volver al Programa</button>
-            }
-            <div class="lineamiento-badge">
-              @if (componenteSeleccionado()) {
-                COMPONENTE {{ componenteSeleccionado() }}
-              } @else {
-                CONDICIÓN {{ numeroLineamiento() }}
-              }
-            </div>
-            <h1>
-              <span class="lineamiento-title-icon" [innerHTML]="getLineamientoIconoSvg(numeroLineamiento())"></span>
-              @if (componenteSeleccionado()) {
-                {{ getNombreComponente(componenteSeleccionado()!) }}
-              } @else {
-                {{ getLineamientoNombre() }}
-              }
-            </h1>
-            <div class="programa-info">
-              <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-              {{ programa()?.nombre }}
-            </div>
-          </div>
-        </div>
+        <section class="header-card" [style.background]="getLineamientoColor()">
+          <button class="btn-back" type="button" (click)="goBack()">Volver al programa</button>
+          <div class="lineamiento-badge">CONDICION {{ numeroLineamiento() }}</div>
+          <h1>{{ getLineamientoNombre() }}</h1>
+          <div class="programa-info">{{ programa()?.nombre }}</div>
+        </section>
 
-        <!-- Main Content -->
         <div class="content-grid">
-          <!-- Vista especial para Condición 3: Aspectos Curriculares -->
-          @if (numeroLineamiento() === 3 && !componenteSeleccionado()) {
-            <div class="componentes-condicion-3">
-              <div class="componentes-header">
-                <h2>Componentes de Aspectos Curriculares</h2>
-                <p>Selecciona un componente para ver más detalles</p>
-              </div>
-              <div class="componentes-grid">
-                @for (componente of COMPONENTES_CONDICION_3; track componente.letra) {
-                  <button
-                    class="componente-card"
-                    (click)="verComponente(componente.letra)"
-                    [style.border-left-color]="componente.color">
-                    <div class="componente-letra" [style.background]="componente.color">{{ componente.letra }}</div>
-                    <div class="componente-content">
-                      <div class="componente-nombre">{{ componente.nombre }}</div>
-                      <div class="componente-descripcion">{{ componente.descripcion }}</div>
-                    </div>
-                    <div class="componente-arrow">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                    </div>
-                  </button>
-                }
-              </div>
-            </div>
-          }
-
-          <!-- Subir Evidencias -->
-          <div class="upload-section">
+          <section class="panel panel-full">
             <div class="section-header">
-              <h2>
-                <svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.2-9.19a4 4 0 0 1 5.65 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-                Evidencias de la Condición
-              </h2>
+              <h2>Descripcion de la condicion</h2>
+              <button
+                class="btn btn-secondary"
+                type="button"
+                (click)="onGuardarDescripcion()"
+                [disabled]="guardandoDescripcion() || !lineamientoId">
+                {{ guardandoDescripcion() ? 'Guardando...' : 'Guardar descripcion' }}
+              </button>
+            </div>
+            <div class="section-body">
+              <textarea
+                class="description-textarea"
+                [value]="descripcionCondicion()"
+                (input)="onDescripcionInput($event)"
+                placeholder="Describe el alcance, enfoque o notas internas de esta condicion...">
+              </textarea>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="section-header">
+              <h2>Evidencias de la condicion</h2>
               <span class="count-badge">{{ evidencias().length }} archivo(s)</span>
             </div>
             <div class="section-body">
               <div class="upload-zone" (click)="evidenciasInput.click()">
-                <div class="upload-icon" [innerHTML]="getSectionIconSvg('upload')"></div>
-                <div class="upload-text">
-                  <strong>Subir Evidencias</strong>
-                  <p>Arrastra archivos PDF o haz clic para seleccionar</p>
-                </div>
+                <strong>Subir evidencias</strong>
+                <p>Selecciona archivos PDF asociados a esta condicion.</p>
                 <input
                   #evidenciasInput
+                  class="file-input"
                   type="file"
                   accept=".pdf"
                   multiple
-                  (change)="onEvidenciasSelect($event)"
-                  class="file-input"
-                />
+                  (change)="onEvidenciasSelect($event)" />
               </div>
 
               @if (evidencias().length > 0) {
                 <div class="files-list">
-                  <div class="list-header">
-                    <span>Archivo</span>
-                    <span>Tamaño</span>
-                    <span>Fecha</span>
-                    <span>Acciones</span>
-                  </div>
                   @for (evidencia of evidencias(); track evidencia.id) {
                     <div class="file-row">
                       <div class="file-info">
-                        <span class="file-icon" [innerHTML]="getSectionIconSvg('file')"></span>
-                        <span class="file-name">{{ evidencia.nombreArchivoOriginal }}</span>
+                        <strong>{{ evidencia.nombreArchivoOriginal }}</strong>
+                        <span>{{ formatBytes(evidencia.tamanoBytes) }} | {{ formatDate(evidencia.fechaSubida) }}</span>
                       </div>
-                      <span class="file-size">{{ formatBytes(evidencia.tamanoBytes) }}</span>
-                      <span class="file-date">{{ formatDate(evidencia.fechaSubida) }}</span>
                       <div class="file-actions">
-                        <button
-                          class="btn-icon btn-download"
-                          (click)="downloadEvidencia(evidencia.id)"
-                          title="Descargar">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                        </button>
-                        <button
-                          class="btn-icon btn-delete"
-                          (click)="deleteEvidencia(evidencia.id)"
-                          title="Eliminar">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-                        </button>
+                        <button class="btn-icon" type="button" title="Descargar" (click)="downloadEvidencia(evidencia.id)">v</button>
+                        <button class="btn-icon btn-danger" type="button" title="Eliminar" (click)="deleteEvidencia(evidencia.id)">x</button>
                       </div>
                     </div>
                   }
                 </div>
               } @else {
                 <div class="empty-state">
-                  <div class="empty-icon" [innerHTML]="getSectionIconSvg('empty')"></div>
-                  <p>No hay evidencias cargadas</p>
-                  <p class="empty-hint">Las evidencias son documentos que respaldan esta condición</p>
+                  <p>No hay evidencias cargadas.</p>
+                  <span>La IA recibe las evidencias de toda la condicion al revisar cualquier seccion.</span>
                 </div>
               }
             </div>
-          </div>
+          </section>
 
-          <!-- Redacción y revisión IA -->
-          @if (numeroLineamiento() !== 3 || componenteSeleccionado()) {
-          <div class="upload-section">
+          <section class="panel">
             <div class="section-header">
-              <h2>
-                <svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
-                Redacción de la condición
-              </h2>
+              <h2>Secciones de la condicion</h2>
+              <button class="btn btn-secondary" type="button" (click)="toggleCrearSeccion()">
+                {{ creandoSeccion() ? 'Cancelar' : 'Nueva seccion' }}
+              </button>
+            </div>
+            <div class="section-body section-list-body">
+              @if (creandoSeccion()) {
+                <div class="create-section">
+                  <input
+                    class="text-input code-input"
+                    [value]="nuevaSeccionCodigo()"
+                    (input)="onNuevaSeccionCodigoInput($event)"
+                    placeholder="Codigo" />
+                  <input
+                    class="text-input"
+                    [value]="nuevaSeccionTitulo()"
+                    (input)="onNuevaSeccionTituloInput($event)"
+                    placeholder="Titulo de la seccion" />
+                  <button class="btn btn-primary" type="button" (click)="onCrearSeccion()" [disabled]="guardandoSeccion()">
+                    Crear
+                  </button>
+                </div>
+              }
+
+              @if (secciones().length > 0) {
+                <div class="section-tabs">
+                  @for (seccion of secciones(); track seccion.id) {
+                    <button
+                      class="section-tab"
+                      type="button"
+                      [class.active]="seccion.id === seccionId()"
+                      (click)="seleccionarSeccion(seccion)">
+                      <span class="section-code">{{ seccion.codigoSeccion }}</span>
+                      <span class="section-title">{{ seccion.titulo || 'Sin titulo' }}</span>
+                      <span class="estado-badge estado-{{ seccion.estado.toLowerCase() }}">{{ seccion.estado }}</span>
+                    </button>
+                  }
+                </div>
+              } @else {
+                <div class="empty-state">
+                  <p>No hay secciones creadas.</p>
+                </div>
+              }
+            </div>
+          </section>
+
+          <section class="panel panel-full">
+            <div class="section-header">
+              <h2>Redaccion y revision IA por seccion</h2>
               @if (seccionId()) {
                 <span class="estado-badge estado-{{ estadoSeccion().toLowerCase() }}">{{ estadoSeccion() }}</span>
               }
             </div>
-            <div class="section-body ia-editor">
-              <div>
-                <label class="ia-hint">
-                  Escribe aquí el texto final de este lineamiento. Una vez guardado, la IA puede revisarlo.
+            <div class="section-body editor-body">
+              <div class="section-fields">
+                <label>
+                  Codigo
+                  <input class="text-input" [value]="seccionCodigo()" (input)="onSeccionCodigoInput($event)" />
                 </label>
-                <textarea
-                  class="ia-textarea"
-                  [value]="textoLineamiento()"
-                  (input)="onTextareaInput($event)"
-                  placeholder="Redacta aquí el contenido de la condición según los requisitos del Decreto 1330..."
-                ></textarea>
+                <label>
+                  Titulo editable
+                  <input class="text-input" [value]="seccionTitulo()" (input)="onSeccionTituloInput($event)" />
+                </label>
+                <label>
+                  Orden
+                  <input class="text-input" type="number" min="1" [value]="seccionOrden()" (input)="onSeccionOrdenInput($event)" />
+                </label>
+                <button
+                  class="btn btn-danger"
+                  type="button"
+                  (click)="onEliminarSeccion()"
+                  [disabled]="!seccionId() || secciones().length <= 1 || guardandoSeccion()">
+                  Eliminar seccion
+                </button>
               </div>
+
+              <textarea
+                class="ia-textarea"
+                [value]="textoLineamiento()"
+                (input)="onTextareaInput($event)"
+                placeholder="Redacta aqui el contenido completo de esta seccion. El campo no limita la extension; puedes ajustar su altura.">
+              </textarea>
 
               <div class="ia-actions">
                 <button
                   class="btn btn-secondary"
                   type="button"
                   (click)="onGuardarContenido()"
-                  [disabled]="guardandoTexto() || !lineamientoId">
-                  {{ guardandoTexto() ? 'Guardando...' : 'Guardar' }}
+                  [disabled]="guardandoTexto() || !lineamientoId || !seccionCodigo().trim() || !seccionTitulo().trim()">
+                  {{ guardandoTexto() ? 'Guardando...' : 'Guardar seccion' }}
+                </button>
+                <button
+                  class="btn btn-ai"
+                  type="button"
+                  (click)="abrirRecomendarTexto()"
+                  [disabled]="!lineamientoId || !seccionId() || !seccionTitulo().trim() || !puedeRecomendarTexto()"
+                  [title]="puedeRecomendarTexto()
+                    ? 'Pide a la IA un texto sugerido para esta seccion'
+                    : 'Agrega titulo de seccion, descripcion de condicion, contenido previo o evidencias antes de pedir asistencia IA.'">
+                  Recomendar texto IA
                 </button>
                 <button
                   class="btn btn-primary"
@@ -201,16 +218,13 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330, COMPONENTES_CONDICION_3, Com
                 </button>
               </div>
 
-              <!-- AI review result -->
               @if (iaResult()) {
                 <div class="ia-result" [class]="getIaResultClass()">
                   <div class="ia-result-header">
-                    <span class="riesgo-badge" [class]="getRiskBadgeClass()">
-                      Riesgo {{ iaResult()!.nivelRiesgo }}
-                    </span>
-                    <span class="ia-result-title">{{ iaResult()!.insufficientContext ? 'No hay contexto suficiente para revisar la sección' : 'Resultado de revisión IA' }}</span>
+                    <span class="riesgo-badge" [class]="getRiskBadgeClass()">Riesgo {{ iaResult()!.nivelRiesgo }}</span>
+                    <strong>{{ iaResult()!.insufficientContext ? 'No hay contexto suficiente' : 'Resultado de revision IA' }}</strong>
                     @if (iaResult()!.cacheHit) {
-                      <span class="cache-chip">Resultado desde cache</span>
+                      <span class="cache-chip">Cache</span>
                     }
                   </div>
 
@@ -218,7 +232,7 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330, COMPONENTES_CONDICION_3, Com
 
                   @if (iaResult()!.recomendacionesConcretas.length > 0) {
                     <div class="ia-section">
-                      <strong>Elementos a mejorar:</strong>
+                      <strong>Elementos a mejorar</strong>
                       <ul>
                         @for (rec of iaResult()!.recomendacionesConcretas; track rec) {
                           <li>{{ rec }}</li>
@@ -229,7 +243,7 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330, COMPONENTES_CONDICION_3, Com
 
                   @if (iaResult()!.checklistCumplimiento.length > 0) {
                     <div class="ia-section">
-                      <strong>Checklist de cumplimiento:</strong>
+                      <strong>Checklist de cumplimiento</strong>
                       <ul>
                         @for (item of iaResult()!.checklistCumplimiento; track item) {
                           <li>{{ item }}</li>
@@ -238,8 +252,8 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330, COMPONENTES_CONDICION_3, Com
                     </div>
                   }
 
-                  @if ((iaResult()!.citas ?? []).length > 0) {
-                    <details class="ia-section ia-citations">
+                  @if (iaResult()!.citas.length > 0) {
+                    <details class="ia-section">
                       <summary>Citas y evidencias usadas ({{ iaResult()!.citas.length }})</summary>
                       <div class="citation-list">
                         @for (cita of iaResult()!.citas; track cita.chunkId) {
@@ -260,30 +274,29 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330, COMPONENTES_CONDICION_3, Com
 
                   @if (iaResult()!.insufficientContext && iaResult()!.retrievalDiagnostics) {
                     <div class="ia-section diagnostics-panel">
-                      <strong>Diagnóstico de recuperación:</strong>
+                      <strong>Diagnostico de recuperacion</strong>
                       <div class="metadata-grid">
-                        <span>Candidatos crudos</span><strong>{{ iaResult()!.retrievalDiagnostics!.rawResultsFound }}</strong>
-                        <span>Sobre umbral</span><strong>{{ iaResult()!.retrievalDiagnostics!.resultsAfterThreshold }}</strong>
-                        <span>Umbral</span><strong>{{ formatNumber(iaResult()!.retrievalDiagnostics!.threshold) }}</strong>
-                        <span>Máxima similitud</span><strong>{{ formatNumber(iaResult()!.retrievalDiagnostics!.maxSimilarity) }}</strong>
+                        <span>Candidatos crudos</span><b>{{ iaResult()!.retrievalDiagnostics!.rawResultsFound }}</b>
+                        <span>Sobre umbral</span><b>{{ iaResult()!.retrievalDiagnostics!.resultsAfterThreshold }}</b>
+                        <span>Umbral</span><b>{{ formatNumber(iaResult()!.retrievalDiagnostics!.threshold) }}</b>
+                        <span>Maxima similitud</span><b>{{ formatNumber(iaResult()!.retrievalDiagnostics!.maxSimilarity) }}</b>
                       </div>
                     </div>
                   }
 
-                  <details class="ia-section ia-metadata">
-                    <summary>Metadata de auditoría</summary>
+                  <details class="ia-section">
+                    <summary>Metadata de auditoria</summary>
                     <div class="metadata-grid">
-                      <span>Modelo</span><strong>{{ iaResult()!.modeloUsado || 'N/D' }}</strong>
-                      <span>Costo estimado</span><strong>{{ formatUsd(iaResult()!.costoEstimadoUsd) }}</strong>
-                      <span>Cache</span><strong>{{ iaResult()!.cacheHit ? 'Sí' : 'No' }}</strong>
-                      <span>OpenAI llamado</span><strong>{{ iaResult()!.aiCalled ? 'Sí' : 'No' }}</strong>
+                      <span>Modelo</span><b>{{ iaResult()!.modeloUsado || 'N/D' }}</b>
+                      <span>Costo estimado</span><b>{{ formatUsd(iaResult()!.costoEstimadoUsd) }}</b>
+                      <span>Cache</span><b>{{ iaResult()!.cacheHit ? 'Si' : 'No' }}</b>
+                      <span>OpenAI llamado</span><b>{{ iaResult()!.aiCalled ? 'Si' : 'No' }}</b>
                     </div>
                   </details>
                 </div>
               }
             </div>
-          </div>
-          }
+          </section>
         </div>
 
         @if (uploading()) {
@@ -295,155 +308,348 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330, COMPONENTES_CONDICION_3, Com
           </div>
         }
       }
+
+      @if (recomendarOpen()) {
+        <div class="recomendar-overlay" (click)="cerrarRecomendarTexto()">
+          <div class="recomendar-modal" (click)="$event.stopPropagation()">
+            <header class="recomendar-head">
+              <div>
+                <div class="recomendar-eyebrow">ASISTENCIA IA &middot; TEXTO SUGERIDO</div>
+                <h2>{{ tituloRecomendar() }}</h2>
+                <div class="recomendar-sub">
+                  Condicion {{ numeroLineamiento() }} &middot; {{ getLineamientoNombre() }}
+                </div>
+              </div>
+              <button class="btn-close" type="button" (click)="cerrarRecomendarTexto()" aria-label="Cerrar">x</button>
+            </header>
+
+            <div class="recomendar-body">
+              <label class="user-instruction-label">
+                Indicacion opcional (max 280 caracteres)
+                <input
+                  class="text-input"
+                  type="text"
+                  maxlength="280"
+                  [value]="recomendarUserInstruction()"
+                  (input)="onRecomendarInstructionInput($event)"
+                  placeholder="Ej: enfatizar el componente practico"
+                  [disabled]="recomendandoTexto()" />
+              </label>
+
+              <div class="recomendar-mode-row">
+                <span class="mode-chip">{{ modoSugeridoLabel() }}</span>
+                <button
+                  class="btn btn-primary"
+                  type="button"
+                  (click)="ejecutarRecomendarTexto()"
+                  [disabled]="recomendandoTexto() || !seccionId()">
+                  {{ recomendandoTexto() ? 'Generando...' : (recomendarResult() ? 'Volver a generar' : 'Generar texto sugerido') }}
+                </button>
+              </div>
+
+              @if (recomendandoTexto()) {
+                <div class="recomendar-loading">
+                  <div class="spinner"></div>
+                  <p>Construyendo recomendacion con el contexto disponible...</p>
+                </div>
+              } @else if (recomendarError()) {
+                <div class="recomendar-error">
+                  <strong>No se pudo generar la recomendacion</strong>
+                  <p>{{ recomendarError() }}</p>
+                </div>
+              } @else if (recomendarResult(); as result) {
+                @if (result.suggestedTitle) {
+                  <div class="suggested-title">
+                    <span class="label">Titulo sugerido</span>
+                    <span class="value">{{ result.suggestedTitle }}</span>
+                  </div>
+                }
+
+                <div class="suggested-text">
+                  <span class="label">Texto sugerido</span>
+                  <pre>{{ result.suggestedText || '(sin texto)' }}</pre>
+                </div>
+
+                @if (result.rationale) {
+                  <div class="rationale-block">
+                    <span class="label">Por que se propone este texto</span>
+                    <p>{{ result.rationale }}</p>
+                  </div>
+                }
+
+                @if (result.usedContext.length > 0) {
+                  <div class="context-block">
+                    <span class="label">Contexto utilizado</span>
+                    <div class="context-tags">
+                      @for (item of result.usedContext; track item.nombre) {
+                        <span class="context-tag tag-{{ item.tipo.toLowerCase() }}">
+                          <small>{{ item.tipo }}</small>
+                          {{ item.nombre }}
+                        </span>
+                      }
+                    </div>
+                  </div>
+                }
+
+                @if (result.warnings.length > 0) {
+                  <div class="warnings-block">
+                    <span class="label">Advertencias</span>
+                    <ul>
+                      @for (w of result.warnings; track w) {
+                        <li>{{ w }}</li>
+                      }
+                    </ul>
+                  </div>
+                }
+
+                <div class="audit-meta">
+                  <span>Modo: <b>{{ result.modeUsed }}</b></span>
+                  <span>Modelo: <b>{{ result.modeloUsado || 'N/D' }}</b></span>
+                  <span>Costo: <b>{{ formatUsd(result.costoEstimadoUsd ?? undefined) }}</b></span>
+                  @if (result.cacheHit) {
+                    <span class="cache-chip">Cache</span>
+                  }
+                </div>
+              } @else {
+                <div class="recomendar-empty">
+                  <p>
+                    La IA usara el contexto disponible (programa, condicion, secciones y evidencias)
+                    para proponerte un texto. Puedes agregar una indicacion opcional antes de generar.
+                  </p>
+                </div>
+              }
+            </div>
+
+            <footer class="recomendar-actions">
+              <button class="btn btn-secondary" type="button" (click)="cerrarRecomendarTexto()">Cerrar</button>
+              <button
+                class="btn btn-secondary"
+                type="button"
+                (click)="copiarSugerido()"
+                [disabled]="!recomendarResult()?.suggestedText">
+                {{ copiadoFlash() ? 'Copiado!' : 'Copiar texto' }}
+              </button>
+              <button
+                class="btn btn-primary"
+                type="button"
+                (click)="insertarSugerido()"
+                [disabled]="!recomendarResult()?.suggestedText">
+                Insertar en seccion
+              </button>
+            </footer>
+          </div>
+        </div>
+      }
     </div>
   `,
   styles: [`
     .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
-
-    .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; gap: 1rem; }
-
-    .spinner { width: 50px; height: 50px; border: 4px solid #e0e0e0; border-top-color: #007b00; border-radius: 50%; animation: spin 1s linear infinite; }
+    .loading { min-height: 420px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; }
+    .spinner { width: 48px; height: 48px; border: 4px solid #e5e7eb; border-top-color: #007b00; border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .error-card { background: #ffebee; border: 2px solid #f44336; border-radius: 0.5rem; padding: 2rem; text-align: center; }
-    .error-card h2 { color: #d32f2f; margin: 0 0 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+    .error-card, .panel { background: white; border-radius: 0.75rem; box-shadow: 0 2px 10px rgba(0,0,0,0.08); overflow: hidden; }
+    .error-card { padding: 2rem; text-align: center; border: 1px solid #fecaca; }
+    .header-card { color: white; border-radius: 1rem; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 4px 20px rgba(0, 92, 0, 0.25); }
+    .btn-back { border: 0; border-radius: 0.5rem; color: white; background: rgba(255,255,255,0.2); padding: 0.55rem 0.9rem; cursor: pointer; margin-bottom: 1rem; }
+    .lineamiento-badge { display: inline-block; background: rgba(255,255,255,0.92); color: #006600; padding: 0.45rem 0.85rem; border-radius: 999px; font-size: 0.78rem; font-weight: 800; }
+    h1 { margin: 0.9rem 0 0.4rem; font-size: 2rem; line-height: 1.15; }
+    .programa-info { opacity: 0.94; }
 
-    .title-icon { width: 20px; height: 20px; flex-shrink: 0; }
-
-    .header-card { background: linear-gradient(135deg, #005c00 0%, #007b00 100%); color: white; border-radius: 1rem; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 4px 20px rgba(0, 92, 0, 0.3); }
-
-    .btn-back { padding: 0.5rem 1rem; background: rgba(255,255,255,0.2); border: none; border-radius: 0.5rem; color: white; cursor: pointer; font-size: 0.95rem; margin-bottom: 1rem; transition: background 0.3s ease; }
-    .btn-back:hover { background: rgba(255,255,255,0.3); }
-
-    .lineamiento-badge { display: inline-block; background: rgba(255,255,255,0.9); color: #006600; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.85rem; font-weight: 700; margin-bottom: 1rem; letter-spacing: 0.5px; }
-
-    h1 { font-size: 2rem; margin: 0 0 0.5rem; font-weight: 700; display: flex; align-items: center; gap: 0.75rem; }
-
-    .lineamiento-title-icon { width: 28px; height: 28px; color: white; display: inline-flex; }
-    .lineamiento-title-icon :is(svg) { width: 100%; height: 100%; }
-
-    .programa-info { font-size: 1rem; opacity: 0.95; display: inline-flex; align-items: center; gap: 0.45rem; }
-    .meta-icon { width: 18px; height: 18px; flex-shrink: 0; }
-
-    .content-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 2rem; }
-
-    .upload-section { background: white; border-radius: 0.75rem; box-shadow: 0 2px 10px rgba(0,0,0,0.08); overflow: hidden; }
-
-    .section-header { padding: 1.5rem; background: #f8f9fa; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; }
-    .section-header h2 { margin: 0; font-size: 1.2rem; color: #333; font-weight: 700; display: inline-flex; align-items: center; gap: 0.5rem; }
-
-    .count-badge { background: #006600; color: white; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.85rem; font-weight: 600; }
-
-    .estado-badge { padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; }
-    .estado-borrador { background: #fff3e0; color: #e65100; }
-    .estado-en_revision { background: #e3f2fd; color: #1565c0; }
-    .estado-validada { background: #e8f5e9; color: #2e7d32; }
-    .estado-observada { background: #fce4ec; color: #880e4f; }
-
+    .content-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(360px, 0.7fr); gap: 1.5rem; align-items: start; }
+    .panel-full { grid-column: 1 / -1; }
+    .section-header { padding: 1.25rem 1.5rem; background: #f8fafc; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+    .section-header h2 { margin: 0; font-size: 1.1rem; color: #1f2937; }
     .section-body { padding: 1.5rem; }
-    .ia-editor { display: flex; flex-direction: column; gap: 1rem; }
 
-    .ia-textarea { width: 100%; min-height: 220px; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #d1d5db; font-size: 0.95rem; resize: vertical; line-height: 1.5; box-sizing: border-box; }
-    .ia-textarea:focus { outline: none; border-color: #006600; box-shadow: 0 0 0 1px rgba(0,102,0,0.3); }
+    .description-textarea, .ia-textarea { width: 100%; box-sizing: border-box; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.85rem; font-size: 0.95rem; line-height: 1.55; resize: vertical; }
+    .description-textarea { min-height: 120px; }
+    .ia-textarea { min-height: 430px; max-height: 72vh; overflow: auto; }
+    .description-textarea:focus, .ia-textarea:focus, .text-input:focus { outline: none; border-color: #006600; box-shadow: 0 0 0 2px rgba(0,102,0,0.12); }
 
-    .ia-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: flex-end; margin-top: 0.5rem; }
-    .ia-hint { font-size: 0.8rem; color: #6b7280; }
-
-    /* IA result panel */
-    .ia-result { border-radius: 0.5rem; padding: 1.25rem; margin-top: 1rem; border-left: 4px solid #ccc; background: #fafafa; }
-    .ia-result--bajo { border-left-color: #4caf50; background: #f1f8f1; }
-    .ia-result--medio { border-left-color: #ff9800; background: #fff8f0; }
-    .ia-result--alto { border-left-color: #f44336; background: #fff5f5; }
-    .ia-result--sin-contexto { border-left-color: #f59e0b; background: #fffbeb; }
-
-    .ia-result-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
-    .ia-result-title { font-weight: 700; color: #333; font-size: 0.95rem; }
-
-    .riesgo-badge { padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; }
-    .riesgo-bajo { background: #c8e6c9; color: #1b5e20; }
-    .riesgo-medio { background: #ffe0b2; color: #bf360c; }
-    .riesgo-alto { background: #ffcdd2; color: #b71c1c; }
-    .riesgo-sin-contexto { background: #fef3c7; color: #92400e; }
-    .cache-chip { background: #e0f2fe; color: #075985; border-radius: 999px; padding: 0.2rem 0.55rem; font-size: 0.75rem; font-weight: 700; }
-
-    .ia-observaciones { color: #555; font-size: 0.95rem; margin: 0 0 0.75rem; line-height: 1.5; }
-    .ia-section { margin-top: 0.75rem; }
-    .ia-section strong { display: block; color: #333; font-size: 0.9rem; margin-bottom: 0.4rem; }
-    .ia-section ul { margin: 0; padding-left: 1.25rem; }
-    .ia-section li { color: #555; font-size: 0.9rem; margin-bottom: 0.25rem; line-height: 1.4; }
-    .ia-section summary { cursor: pointer; color: #333; font-weight: 700; font-size: 0.9rem; margin-bottom: 0.5rem; }
-    .citation-list { display: flex; flex-direction: column; gap: 0.75rem; }
-    .citation-item { background: rgba(255,255,255,0.7); border: 1px solid #e0e0e0; border-radius: 0.5rem; padding: 0.75rem; }
-    .citation-meta { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; color: #666; font-size: 0.78rem; margin-bottom: 0.4rem; }
-    .citation-meta strong { display: inline; margin: 0; font-size: 0.82rem; color: #333; }
-    .citation-meta span { background: #f1f5f9; border-radius: 999px; padding: 0.15rem 0.45rem; }
-    .citation-item blockquote { margin: 0; color: #444; font-size: 0.88rem; line-height: 1.45; border-left: 3px solid #006600; padding-left: 0.75rem; }
-    .metadata-grid { display: grid; grid-template-columns: minmax(110px, auto) 1fr; gap: 0.35rem 0.75rem; font-size: 0.86rem; color: #555; }
-    .metadata-grid strong { display: inline; margin: 0; font-size: 0.86rem; }
-    .diagnostics-panel { background: rgba(245, 158, 11, 0.08); border-radius: 0.5rem; padding: 0.75rem; }
-
-    .upload-zone { border: 2px dashed #006600; border-radius: 0.75rem; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.3s ease; background: #f0f8f0; }
-    .upload-zone:hover { border-color: #005c00; background: #e8f5e9; transform: translateY(-2px); }
-
-    .upload-icon { width: 48px; height: 48px; margin: 0 auto 1rem; color: #006600; }
-    .upload-icon :is(svg) { width: 100%; height: 100%; margin-bottom: 1rem; }
-    .upload-text strong { display: block; color: #333; font-size: 1.1rem; margin-bottom: 0.5rem; }
-    .upload-text p { color: #666; font-size: 0.9rem; margin: 0; }
+    .upload-zone { border: 2px dashed #15803d; background: #f0fdf4; border-radius: 0.75rem; padding: 1.5rem; text-align: center; cursor: pointer; }
+    .upload-zone p { margin: 0.35rem 0 0; color: #4b5563; font-size: 0.9rem; }
     .file-input { display: none; }
+    .files-list { margin-top: 1rem; display: flex; flex-direction: column; gap: 0.65rem; }
+    .file-row { border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 0.85rem; display: flex; justify-content: space-between; gap: 1rem; align-items: center; }
+    .file-info { min-width: 0; display: flex; flex-direction: column; gap: 0.2rem; }
+    .file-info strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .file-info span, .empty-state span { color: #6b7280; font-size: 0.85rem; }
+    .file-actions { display: flex; gap: 0.4rem; }
 
-    .files-list { margin-top: 1.5rem; }
-    .list-header { display: grid; grid-template-columns: 1fr auto auto auto; gap: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 0.5rem; font-weight: 600; font-size: 0.9rem; color: #666; margin-bottom: 0.5rem; align-items: center; }
-    .file-row { display: grid; grid-template-columns: 1fr auto auto auto; gap: 1rem; padding: 1rem; border: 1px solid #e0e0e0; border-radius: 0.5rem; margin-bottom: 0.5rem; align-items: center; transition: all 0.2s ease; }
-    .file-row:hover { background: #f9f9f9; border-color: #006600; }
-    .file-info { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
-    .file-icon { width: 20px; height: 20px; display: inline-flex; color: #006600; flex-shrink: 0; }
-    .file-icon :is(svg) { width: 100%; height: 100%; }
-    .file-name { font-weight: 500; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
-    .file-size, .file-date { font-size: 0.9rem; color: #666; white-space: nowrap; padding: 0 0.5rem; }
-    .file-actions { display: flex; gap: 0.5rem; justify-content: flex-end; flex-shrink: 0; }
+    .section-list-body { display: flex; flex-direction: column; gap: 1rem; }
+    .create-section { display: grid; grid-template-columns: 110px minmax(0, 1fr) auto; gap: 0.65rem; align-items: center; }
+    .section-tabs { display: flex; flex-direction: column; gap: 0.6rem; }
+    .section-tab { border: 1px solid #e5e7eb; background: white; border-radius: 0.5rem; padding: 0.85rem; text-align: left; cursor: pointer; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 0.75rem; align-items: center; }
+    .section-tab.active { border-color: #15803d; background: #f0fdf4; box-shadow: 0 0 0 1px #15803d inset; }
+    .section-code { color: #15803d; font-weight: 800; }
+    .section-title { color: #1f2937; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-    .btn-icon { padding: 0.5rem; border: none; background: transparent; cursor: pointer; border-radius: 0.25rem; transition: all 0.2s ease; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; }
-    .btn-icon svg { width: 18px; height: 18px; }
-    .btn-icon:hover { transform: scale(1.2); }
-    .btn-download:hover { background: #e3f2fd; }
-    .btn-delete:hover { background: #ffebee; }
+    .editor-body { display: flex; flex-direction: column; gap: 1rem; }
+    .section-fields { display: grid; grid-template-columns: 150px minmax(0, 1fr) 110px auto; gap: 0.75rem; align-items: end; }
+    .section-fields label { display: flex; flex-direction: column; gap: 0.35rem; color: #4b5563; font-size: 0.82rem; font-weight: 700; }
+    .text-input { height: 40px; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0 0.75rem; font-size: 0.92rem; box-sizing: border-box; min-width: 0; }
+    .code-input { text-transform: uppercase; }
+    .ia-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.75rem; }
 
-    .empty-state { text-align: center; padding: 3rem 1rem; }
-    .empty-icon { width: 56px; height: 56px; margin: 0 auto 1rem; opacity: 0.5; }
-    .empty-icon :is(svg) { width: 100%; height: 100%; }
-    .empty-state p { color: #666; margin: 0.5rem 0; }
-    .empty-hint { font-size: 0.9rem; color: #999; }
-
-    .upload-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 9999; }
-    .upload-progress { background: white; padding: 2rem; border-radius: 0.75rem; text-align: center; }
-    .upload-progress p { margin-top: 1rem; font-weight: 600; color: #333; }
-
-    .btn { padding: 0.75rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn { border: 0; border-radius: 0.5rem; padding: 0.72rem 1rem; font-size: 0.92rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
     .btn-primary { background: #006600; color: white; }
-    .btn-primary:hover:not(:disabled) { background: #005c00; }
-    .btn-secondary { background: #e0e0e0; color: #333; }
-    .btn-secondary:hover:not(:disabled) { background: #d0d0d0; }
+    .btn-secondary { background: #e5e7eb; color: #1f2937; }
+    .btn-danger { background: #fee2e2; color: #991b1b; }
+    .btn-icon { width: 34px; height: 34px; border: 0; border-radius: 0.35rem; background: #e5e7eb; cursor: pointer; font-size: 1.1rem; }
+    .btn-icon.btn-danger { background: #fee2e2; color: #991b1b; }
+    .count-badge, .estado-badge, .cache-chip { border-radius: 999px; padding: 0.25rem 0.7rem; font-size: 0.76rem; font-weight: 800; white-space: nowrap; }
+    .count-badge { background: #006600; color: white; }
+    .estado-borrador { background: #fff7ed; color: #c2410c; }
+    .estado-en_revision { background: #dbeafe; color: #1d4ed8; }
+    .estado-validada { background: #dcfce7; color: #166534; }
+    .estado-observada { background: #fce7f3; color: #9d174d; }
+    .empty-state { border: 1px dashed #d1d5db; border-radius: 0.5rem; padding: 1.5rem; text-align: center; color: #4b5563; }
 
-    .componentes-condicion-3 { grid-column: 1 / -1; background: white; border-radius: 0.75rem; padding: 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
-    .componentes-header { margin-bottom: 2rem; }
-    .componentes-header h2 { font-size: 1.3rem; color: #333; margin: 0 0 0.5rem; font-weight: 700; }
-    .componentes-header p { color: #666; margin: 0; font-size: 0.95rem; }
-    .componentes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+    .ia-result { border-left: 4px solid #9ca3af; border-radius: 0.5rem; background: #f9fafb; padding: 1.1rem; }
+    .ia-result--bajo { border-left-color: #22c55e; background: #f0fdf4; }
+    .ia-result--medio { border-left-color: #f59e0b; background: #fffbeb; }
+    .ia-result--alto { border-left-color: #ef4444; background: #fef2f2; }
+    .ia-result--sin-contexto { border-left-color: #f59e0b; background: #fffbeb; }
+    .ia-result-header { display: flex; flex-wrap: wrap; gap: 0.7rem; align-items: center; margin-bottom: 0.8rem; }
+    .riesgo-bajo { background: #bbf7d0; color: #14532d; }
+    .riesgo-medio { background: #fde68a; color: #92400e; }
+    .riesgo-alto { background: #fecaca; color: #991b1b; }
+    .riesgo-sin-contexto { background: #fef3c7; color: #92400e; }
+    .cache-chip { background: #e0f2fe; color: #075985; }
+    .ia-observaciones { color: #374151; line-height: 1.55; }
+    .ia-section { margin-top: 0.9rem; }
+    .ia-section summary { cursor: pointer; font-weight: 800; }
+    .ia-section li { margin-bottom: 0.28rem; line-height: 1.45; }
+    .citation-list { margin-top: 0.75rem; display: grid; gap: 0.75rem; }
+    .citation-item { border: 1px solid #e5e7eb; background: rgba(255,255,255,0.75); border-radius: 0.5rem; padding: 0.8rem; }
+    .citation-meta { display: flex; flex-wrap: wrap; gap: 0.45rem; font-size: 0.78rem; color: #4b5563; margin-bottom: 0.45rem; }
+    .citation-meta span { background: #f1f5f9; border-radius: 999px; padding: 0.15rem 0.45rem; }
+    blockquote { margin: 0; border-left: 3px solid #15803d; padding-left: 0.75rem; color: #374151; line-height: 1.45; }
+    .metadata-grid { display: grid; grid-template-columns: minmax(130px, auto) 1fr; gap: 0.4rem 0.8rem; font-size: 0.86rem; }
+    .diagnostics-panel { border-radius: 0.5rem; padding: 0.8rem; background: rgba(245,158,11,0.08); }
 
-    .componente-card { display: flex; align-items: center; gap: 1rem; padding: 1.25rem; background: white; border: 2px solid #e0e0e0; border-left: 4px solid #006600; border-radius: 0.5rem; cursor: pointer; transition: all 0.3s ease; text-align: left; }
-    .componente-card:hover { border-color: #006600; background: #f0f8f0; transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,102,0,0.2); }
-    .componente-letra { min-width: 50px; min-height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; color: white; font-weight: 700; font-size: 1.3rem; flex-shrink: 0; }
-    .componente-content { flex: 1; }
-    .componente-nombre { font-weight: 600; color: #333; font-size: 0.95rem; line-height: 1.3; margin-bottom: 0.25rem; }
-    .componente-descripcion { color: #666; font-size: 0.85rem; line-height: 1.3; }
-    .componente-arrow { color: #006600; display: flex; align-items: center; justify-content: center; }
-    .componente-arrow svg { width: 18px; height: 18px; }
+    .upload-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    .upload-progress { background: white; border-radius: 0.75rem; padding: 2rem; text-align: center; }
 
-    @media (max-width: 768px) {
-      .content-grid { grid-template-columns: 1fr; }
-      .list-header, .file-row { grid-template-columns: 1fr; gap: 0.5rem; }
-      .file-actions { justify-content: flex-start; }
+    /* ── Recomendar texto IA modal ───────────────────────────────────────── */
+    .btn-ai { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+    .btn-ai:hover:not(:disabled) { background: #d1fae5; }
+
+    .recomendar-overlay {
+      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1050; padding: 1.5rem;
+    }
+    .recomendar-modal {
+      background: white; border-radius: 1rem; width: 100%; max-width: 880px;
+      max-height: 94vh; display: flex; flex-direction: column;
+      box-shadow: 0 24px 64px rgba(15, 23, 42, 0.35); overflow: hidden;
+    }
+    .recomendar-head {
+      padding: 1.25rem 1.5rem; display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 1rem; border-bottom: 1px solid #e5e7eb;
+      background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%);
+    }
+    .recomendar-head h2 { margin: 0.35rem 0 0.25rem; font-size: 1.35rem; color: #1f2937; }
+    .recomendar-eyebrow {
+      font-size: 0.72rem; font-weight: 800; letter-spacing: 1.4px; color: #047857;
+    }
+    .recomendar-sub { font-size: 0.86rem; color: #4b5563; }
+    .btn-close {
+      border: 0; background: rgba(15, 23, 42, 0.05); width: 32px; height: 32px;
+      border-radius: 50%; font-size: 1rem; cursor: pointer; color: #1f2937;
+    }
+    .btn-close:hover { background: rgba(15, 23, 42, 0.1); }
+
+    .recomendar-body {
+      padding: 1.25rem 1.5rem; overflow: auto; display: flex; flex-direction: column; gap: 1rem;
+    }
+    .user-instruction-label {
+      display: flex; flex-direction: column; gap: 0.35rem;
+      font-size: 0.82rem; font-weight: 700; color: #374151;
+    }
+    .recomendar-mode-row {
+      display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;
+      justify-content: space-between;
+    }
+    .mode-chip {
+      background: #f1f5f9; color: #1f2937; border-radius: 999px;
+      padding: 0.35rem 0.9rem; font-size: 0.82rem; font-weight: 700;
+    }
+    .recomendar-loading {
+      display: flex; flex-direction: column; align-items: center; gap: 0.75rem;
+      padding: 2rem 0; color: #4b5563;
+    }
+    .recomendar-error {
+      background: #fef2f2; border-left: 4px solid #ef4444; padding: 0.9rem 1rem;
+      border-radius: 0.5rem; color: #991b1b;
+    }
+    .recomendar-error strong { display: block; margin-bottom: 0.25rem; }
+    .recomendar-empty {
+      background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 0.5rem;
+      padding: 1.25rem; color: #4b5563; font-size: 0.92rem;
+    }
+
+    .suggested-title { display: flex; flex-direction: column; gap: 0.25rem; }
+    .suggested-title .value { font-weight: 700; color: #1f2937; font-size: 1.02rem; }
+    .label {
+      font-size: 0.72rem; font-weight: 800; letter-spacing: 1.2px;
+      color: #6b7280; text-transform: uppercase;
+    }
+    .suggested-text pre {
+      margin: 0; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 0.55rem;
+      padding: 0.9rem 1rem; font-family: inherit; font-size: 0.96rem; line-height: 1.6;
+      color: #1f2937; white-space: pre-wrap; word-break: break-word;
+      max-height: 60vh; overflow: auto;
+    }
+    .rationale-block p { margin: 0.35rem 0 0; color: #374151; line-height: 1.5; }
+
+    .context-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.4rem; }
+    .context-tag {
+      background: #f1f5f9; border-radius: 999px; padding: 0.25rem 0.75rem;
+      font-size: 0.82rem; color: #1f2937; display: inline-flex; gap: 0.35rem;
+      align-items: center;
+    }
+    .context-tag small {
+      font-size: 0.62rem; font-weight: 800; letter-spacing: 1px;
+      color: #6b7280;
+    }
+    .tag-condition { background: #ecfdf5; }
+    .tag-section   { background: #eff6ff; }
+    .tag-attachment{ background: #fef3c7; }
+    .tag-program   { background: #fae8ff; }
+    .tag-normative { background: #fee2e2; }
+
+    .warnings-block ul { margin: 0.4rem 0 0; padding-left: 1.25rem; color: #92400e; }
+    .warnings-block li { margin-bottom: 0.25rem; line-height: 1.45; }
+
+    .audit-meta {
+      display: flex; flex-wrap: wrap; gap: 0.75rem; padding-top: 0.6rem;
+      border-top: 1px dashed #e5e7eb; font-size: 0.82rem; color: #4b5563;
+    }
+
+    .recomendar-actions {
+      padding: 0.9rem 1.5rem; border-top: 1px solid #e5e7eb;
+      display: flex; gap: 0.6rem; justify-content: flex-end; flex-wrap: wrap;
+      background: #f9fafb;
+    }
+
+    @media (max-width: 640px) {
+      .recomendar-modal { max-height: 96vh; border-radius: 0.75rem; }
+      .recomendar-actions { justify-content: stretch; }
+      .recomendar-actions .btn { flex: 1; min-width: 110px; }
+    }
+
+    @media (max-width: 900px) {
+      .container { padding: 1rem; }
+      .content-grid, .section-fields, .create-section { grid-template-columns: 1fr; }
+      .panel-full { grid-column: auto; }
+      .section-header { align-items: flex-start; flex-direction: column; }
+      .section-tab { grid-template-columns: 1fr; }
+      .ia-actions { justify-content: stretch; }
+      .ia-actions .btn { flex: 1; }
     }
   `]
 })
@@ -452,28 +658,52 @@ export class LineamientoDetailComponent implements OnInit {
   private evidenciaService = inject(EvidenciaService);
   private lineamientoService = inject(LineamientoService);
   private seccionService = inject(SeccionService);
-  private sanitizer = inject(DomSanitizer);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
   protected programa = signal<ProgramaDTO | null>(null);
-  protected numeroLineamiento = signal<number>(0);
-  protected componenteSeleccionado = signal<'A' | 'B' | 'C' | 'D' | 'E' | null>(null);
+  protected lineamientoActual = signal<LineamientoDTO | null>(null);
+  protected numeroLineamiento = signal(0);
   protected evidencias = signal<EvidenciaDTO[]>([]);
+  protected secciones = signal<SeccionDTO[]>([]);
   protected loading = signal(true);
   protected uploading = signal(false);
   protected error = signal<string | null>(null);
-  protected textoLineamiento = signal<string>('');
-  protected estadoSeccion = signal<string>('BORRADOR');
+
+  protected descripcionCondicion = signal('');
+  protected guardandoDescripcion = signal(false);
+
+  protected seccionId = signal<number | null>(null);
+  protected seccionCodigo = signal('');
+  protected seccionTitulo = signal('');
+  protected seccionOrden = signal(1);
+  protected textoLineamiento = signal('');
+  protected estadoSeccion = signal<EstadoSeccion>('BORRADOR');
   protected guardandoTexto = signal(false);
+  protected guardandoSeccion = signal(false);
   protected revisandoIA = signal(false);
   protected iaResult = signal<IaRevisionResultDTO | null>(null);
 
+  // ── Recomendar texto IA — modal state ─────────────────────────────────────
+  protected recomendarOpen = signal(false);
+  protected recomendandoTexto = signal(false);
+  protected recomendarError = signal<string | null>(null);
+  protected recomendarResult = signal<RecomendarTextoResponse | null>(null);
+  protected recomendarUserInstruction = signal('');
+  protected copiadoFlash = signal(false);
+  private copiadoFlashTimer: ReturnType<typeof setTimeout> | null = null;
+
+  protected creandoSeccion = signal(false);
+  protected nuevaSeccionCodigo = signal('');
+  protected nuevaSeccionTitulo = signal('');
+
+  protected seccionActiva = computed(() =>
+    this.secciones().find(seccion => seccion.id === this.seccionId()) ?? null
+  );
+
   lineamientoId: number | null = null;
-  seccionId = signal<number | null>(null);
 
   protected readonly LINEAMIENTOS = LINEAMIENTOS_DECRETO_1330;
-  protected readonly COMPONENTES_CONDICION_3 = COMPONENTES_CONDICION_3;
 
   ngOnInit(): void {
     const programaId =
@@ -482,63 +712,87 @@ export class LineamientoDetailComponent implements OnInit {
     const numeroLineamiento =
       this.route.snapshot.paramMap.get('numero') ??
       this.route.snapshot.paramMap.get('lineamiento');
-    const componente = this.route.snapshot.paramMap.get('componente') as 'A' | 'B' | 'C' | 'D' | 'E' | null;
 
-    if (programaId && numeroLineamiento) {
-      const programaIdNum = +programaId;
-      const numeroLinNum = +numeroLineamiento;
-
-      this.numeroLineamiento.set(numeroLinNum);
-      if (componente) this.componenteSeleccionado.set(componente);
-
-      this.loadPrograma(programaIdNum);
-      this.loadLineamientoData(programaIdNum, numeroLinNum);
-    } else {
-      this.error.set('Parámetros inválidos');
+    if (!programaId || !numeroLineamiento) {
+      this.error.set('Parametros invalidos');
       this.loading.set(false);
+      return;
     }
+
+    const programaIdNum = +programaId;
+    const numeroLinNum = +numeroLineamiento;
+    this.numeroLineamiento.set(numeroLinNum);
+    this.prepareNewSectionDefaults();
+    this.loadPrograma(programaIdNum);
+    this.loadLineamientoData(programaIdNum, numeroLinNum);
   }
 
-  loadPrograma(id: number): void {
+  private loadPrograma(id: number): void {
     this.programaService.getPrograma(id).subscribe({
-      next: (data) => { this.programa.set(data); this.loading.set(false); },
-      error: () => { this.error.set('No se pudo cargar el programa'); this.loading.set(false); }
+      next: (data) => this.programa.set(data),
+      error: () => {
+        this.error.set('No se pudo cargar el programa');
+        this.loading.set(false);
+      }
     });
   }
 
-  loadLineamientoData(programaId: number, numeroLineamiento: number): void {
+  private loadLineamientoData(programaId: number, numeroLineamiento: number): void {
     this.lineamientoService.getLineamientos(programaId).subscribe({
       next: (lineamientos) => {
         const lin = lineamientos.find(l => l.numero === numeroLineamiento);
-        if (lin) {
-          this.lineamientoId = lin.id;
-          this.loadEvidencias(lin.id);
-          this.loadSeccion(lin.id);
+        if (!lin) {
+          this.error.set('No se encontro la condicion solicitada');
+          this.loading.set(false);
+          return;
         }
+        this.lineamientoActual.set(lin);
+        this.descripcionCondicion.set(lin.descripcion ?? '');
+        this.lineamientoId = lin.id;
+        this.loadEvidencias(lin.id);
+        this.loadSecciones(lin.id);
       },
-      error: (err) => console.error('Error loading lineamiento:', err)
+      error: () => {
+        this.error.set('No se pudo cargar la condicion');
+        this.loading.set(false);
+      }
     });
   }
 
-  private loadSeccion(lineamientoId: number): void {
+  private loadSecciones(lineamientoId: number, preferredId?: number): void {
     this.seccionService.getByLineamiento(lineamientoId).subscribe({
       next: (secciones) => {
-        if (secciones.length > 0) {
-          const sec = secciones[0];
-          this.seccionId.set(sec.id);
-          this.textoLineamiento.set(sec.contenidoRedactado ?? '');
-          this.estadoSeccion.set(sec.estado);
+        const sorted = this.sortSecciones(secciones);
+        this.secciones.set(sorted);
+        const selected = sorted.find(sec => sec.id === preferredId) ?? sorted[0] ?? null;
+        if (selected) {
+          this.seleccionarSeccion(selected);
         }
+        this.prepareNewSectionDefaults();
+        this.loading.set(false);
       },
-      error: (err) => console.error('Error loading sección:', err)
+      error: () => {
+        this.error.set('No se pudieron cargar las secciones');
+        this.loading.set(false);
+      }
     });
   }
 
-  loadEvidencias(lineamientoId: number): void {
+  private loadEvidencias(lineamientoId: number): void {
     this.evidenciaService.getEvidenciasByLineamiento(lineamientoId).subscribe({
       next: (data) => this.evidencias.set(data),
       error: (err) => console.error('Error loading evidencias:', err)
     });
+  }
+
+  seleccionarSeccion(seccion: SeccionDTO): void {
+    this.seccionId.set(seccion.id);
+    this.seccionCodigo.set(seccion.codigoSeccion ?? '');
+    this.seccionTitulo.set(seccion.titulo ?? '');
+    this.seccionOrden.set(seccion.orden ?? 1);
+    this.textoLineamiento.set(seccion.contenidoRedactado ?? '');
+    this.estadoSeccion.set(seccion.estado);
+    this.iaResult.set(null);
   }
 
   onEvidenciasSelect(event: Event): void {
@@ -559,8 +813,7 @@ export class LineamientoDetailComponent implements OnInit {
             input.value = '';
           }
         },
-        error: (err) => {
-          console.error('Error uploading evidencia:', err);
+        error: () => {
           completed++;
           if (completed === files.length) {
             this.uploading.set(false);
@@ -571,27 +824,98 @@ export class LineamientoDetailComponent implements OnInit {
     });
   }
 
+  onDescripcionInput(event: Event): void {
+    this.descripcionCondicion.set((event.target as HTMLTextAreaElement).value);
+  }
+
+  onGuardarDescripcion(): void {
+    if (!this.lineamientoId) return;
+
+    this.guardandoDescripcion.set(true);
+    this.lineamientoService.updateLineamiento(this.lineamientoId, {
+      descripcion: this.descripcionCondicion()
+    }).subscribe({
+      next: (lin) => {
+        this.lineamientoActual.set(lin);
+        this.descripcionCondicion.set(lin.descripcion ?? '');
+        this.guardandoDescripcion.set(false);
+      },
+      error: () => {
+        alert('No fue posible guardar la descripcion.');
+        this.guardandoDescripcion.set(false);
+      }
+    });
+  }
+
   onTextareaInput(event: Event): void {
     this.textoLineamiento.set((event.target as HTMLTextAreaElement).value);
   }
 
-  onGuardarContenido(): void {
-    if (!this.lineamientoId) return;
+  onSeccionCodigoInput(event: Event): void {
+    this.seccionCodigo.set((event.target as HTMLInputElement).value);
+  }
 
-    this.guardandoTexto.set(true);
-    this.seccionService.guardar(this.lineamientoId, {
-      contenidoRedactado: this.textoLineamiento(),
-      observaciones: '',
-      estado: 'EN_REVISION'
+  onSeccionTituloInput(event: Event): void {
+    this.seccionTitulo.set((event.target as HTMLInputElement).value);
+  }
+
+  onSeccionOrdenInput(event: Event): void {
+    const value = Number((event.target as HTMLInputElement).value);
+    this.seccionOrden.set(Number.isFinite(value) && value > 0 ? value : 1);
+  }
+
+  toggleCrearSeccion(): void {
+    this.creandoSeccion.update(value => !value);
+    this.prepareNewSectionDefaults();
+  }
+
+  onNuevaSeccionCodigoInput(event: Event): void {
+    this.nuevaSeccionCodigo.set((event.target as HTMLInputElement).value);
+  }
+
+  onNuevaSeccionTituloInput(event: Event): void {
+    this.nuevaSeccionTitulo.set((event.target as HTMLInputElement).value);
+  }
+
+  onCrearSeccion(): void {
+    if (!this.lineamientoId) return;
+    const codigoSeccion = this.nuevaSeccionCodigo().trim();
+    const titulo = this.nuevaSeccionTitulo().trim();
+    if (!codigoSeccion || !titulo) {
+      alert('Codigo y titulo son obligatorios.');
+      return;
+    }
+
+    this.guardandoSeccion.set(true);
+    this.seccionService.crear(this.lineamientoId, {
+      codigoSeccion,
+      titulo,
+      orden: this.nextOrden()
     }).subscribe({
+      next: (created) => {
+        this.replaceSeccion(created);
+        this.seleccionarSeccion(created);
+        this.creandoSeccion.set(false);
+        this.prepareNewSectionDefaults();
+        this.guardandoSeccion.set(false);
+      },
+      error: () => {
+        alert('No fue posible crear la seccion.');
+        this.guardandoSeccion.set(false);
+      }
+    });
+  }
+
+  onGuardarContenido(): void {
+    this.guardandoTexto.set(true);
+    this.persistActiveSection('EN_REVISION').subscribe({
       next: (sec) => {
-        this.seccionId.set(sec.id);
-        this.estadoSeccion.set(sec.estado);
+        this.replaceSeccion(sec);
+        this.seleccionarSeccion(sec);
         this.guardandoTexto.set(false);
       },
-      error: (err) => {
-        console.error('Error guardando sección:', err);
-        alert('No fue posible guardar el contenido.');
+      error: () => {
+        alert('No fue posible guardar la seccion.');
         this.guardandoTexto.set(false);
       }
     });
@@ -601,30 +925,89 @@ export class LineamientoDetailComponent implements OnInit {
     if (!this.lineamientoId || !this.textoLineamiento().trim()) return;
 
     this.revisandoIA.set(true);
-    this.seccionService.guardar(this.lineamientoId, {
-      contenidoRedactado: this.textoLineamiento(),
-      observaciones: '',
-      estado: 'EN_REVISION'
-    }).subscribe({
-      next: (sec) => {
-        this.seccionId.set(sec.id);
-        this.seccionService.revisarConIA(sec.id).subscribe({
-          next: (result) => {
-            this.iaResult.set(result);
-            this.revisandoIA.set(false);
-          },
-          error: (err) => {
-            console.error('Error revisando con IA:', err);
-            alert('No fue posible obtener la revisión de la IA.');
-            this.revisandoIA.set(false);
-          }
-        });
+    this.persistActiveSection('EN_REVISION').pipe(
+      switchMap(sec => {
+        this.replaceSeccion(sec);
+        this.seleccionarSeccion(sec);
+        return this.seccionService.revisarConIA(sec.id);
+      })
+    ).subscribe({
+      next: (result) => {
+        this.iaResult.set(result);
+        this.revisandoIA.set(false);
       },
       error: () => {
-        alert('No se pudo guardar antes de revisar.');
+        alert('No fue posible obtener la revision de la IA.');
         this.revisandoIA.set(false);
       }
     });
+  }
+
+  onEliminarSeccion(): void {
+    const active = this.seccionActiva();
+    if (!active || !this.lineamientoId || this.secciones().length <= 1) return;
+    if (!confirm('Eliminar esta seccion?')) return;
+
+    this.guardandoSeccion.set(true);
+    this.seccionService.eliminar(active.id).subscribe({
+      next: () => {
+        const remaining = this.secciones().filter(sec => sec.id !== active.id);
+        this.secciones.set(remaining);
+        if (remaining.length > 0) {
+          this.seleccionarSeccion(remaining[0]);
+        }
+        this.prepareNewSectionDefaults();
+        this.guardandoSeccion.set(false);
+      },
+      error: () => {
+        alert('No fue posible eliminar la seccion.');
+        this.guardandoSeccion.set(false);
+      }
+    });
+  }
+
+  private persistActiveSection(estado: EstadoSeccion) {
+    if (!this.lineamientoId) {
+      throw new Error('Lineamiento no disponible');
+    }
+
+    const payload: ActualizarSeccionRequest = {
+      codigoSeccion: this.seccionCodigo().trim(),
+      titulo: this.seccionTitulo().trim(),
+      orden: this.seccionOrden(),
+      contenidoRedactado: this.textoLineamiento(),
+      observaciones: this.seccionActiva()?.observaciones ?? '',
+      estado
+    };
+
+    const id = this.seccionId();
+    return id
+      ? this.seccionService.actualizar(id, payload)
+      : this.seccionService.guardar(this.lineamientoId, payload);
+  }
+
+  private replaceSeccion(seccion: SeccionDTO): void {
+    const next = this.secciones().some(sec => sec.id === seccion.id)
+      ? this.secciones().map(sec => sec.id === seccion.id ? seccion : sec)
+      : [...this.secciones(), seccion];
+    this.secciones.set(this.sortSecciones(next));
+  }
+
+  private sortSecciones(secciones: SeccionDTO[]): SeccionDTO[] {
+    return [...secciones].sort((a, b) =>
+      (a.orden ?? Number.MAX_SAFE_INTEGER) - (b.orden ?? Number.MAX_SAFE_INTEGER) ||
+      a.codigoSeccion.localeCompare(b.codigoSeccion)
+    );
+  }
+
+  private nextOrden(): number {
+    return this.secciones().reduce((max, sec) => Math.max(max, sec.orden ?? 0), 0) + 1;
+  }
+
+  private prepareNewSectionDefaults(): void {
+    const next = this.secciones().length + 1;
+    this.nuevaSeccionCodigo.set(`L${this.numeroLineamiento()}.${next}`);
+    this.nuevaSeccionTitulo.set('Nueva seccion');
   }
 
   downloadEvidencia(id: number): void {
@@ -632,7 +1015,9 @@ export class LineamientoDetailComponent implements OnInit {
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url; a.download = 'evidencia.pdf'; a.click();
+        a.href = url;
+        a.download = 'evidencia.pdf';
+        a.click();
         window.URL.revokeObjectURL(url);
       },
       error: () => alert('Error al descargar')
@@ -640,40 +1025,17 @@ export class LineamientoDetailComponent implements OnInit {
   }
 
   deleteEvidencia(id: number): void {
-    if (!confirm('¿Eliminar esta evidencia?')) return;
+    if (!confirm('Eliminar esta evidencia?')) return;
     this.evidenciaService.deleteEvidencia(id).subscribe({
-      next: () => this.loadEvidencias(this.lineamientoId!),
+      next: () => this.lineamientoId && this.loadEvidencias(this.lineamientoId),
       error: () => alert('Error al eliminar')
     });
   }
 
   getLineamientoNombre(): string {
-    return this.LINEAMIENTOS.find(l => l.numero === this.numeroLineamiento())?.nombre ?? '';
-  }
-
-  getLineamientoIconoSvg(numero: number): SafeHtml {
-    const iconos: Record<number, string> = {
-      1: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`,
-      2: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`,
-      3: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
-      4: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
-      5: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>`,
-      6: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
-      7: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
-      8: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
-      9: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`
-    };
-    return this.sanitizer.bypassSecurityTrustHtml(iconos[numero] ?? iconos[1]);
-  }
-
-  getSectionIconSvg(tipo: 'upload' | 'file' | 'empty' | 'ai'): SafeHtml {
-    const iconos = {
-      upload: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`,
-      file: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`,
-      empty: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12H2"/><path d="M5.45 5.11L2 12l3.45 6.89A2 2 0 0 0 7.24 20h9.52a2 2 0 0 0 1.79-1.11L22 12l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>`,
-      ai: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>`
-    };
-    return this.sanitizer.bypassSecurityTrustHtml(iconos[tipo]);
+    return this.lineamientoActual()?.nombre
+      ?? this.LINEAMIENTOS.find(l => l.numero === this.numeroLineamiento())?.nombre
+      ?? `Condicion ${this.numeroLineamiento()}`;
   }
 
   getLineamientoColor(): string {
@@ -682,33 +1044,33 @@ export class LineamientoDetailComponent implements OnInit {
   }
 
   formatBytes(bytes: number): string {
-    if (bytes === 0) return '0 Bytes';
+    if (!bytes) return '0 Bytes';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    return `${Math.round(bytes / Math.pow(k, i) * 100) / 100} ${sizes[i]}`;
   }
 
   formatDate(dateString: string): string {
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      year: 'numeric', month: 'short', day: 'numeric',
-      hour: '2-digit', minute: '2-digit'
+    return new Date(dateString).toLocaleDateString('es-CO', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   }
 
   shortenId(id: string | undefined): string {
-    if (!id) return 'chunk N/D';
-    return `chunk ${id.slice(0, 8)}`;
+    return id ? `chunk ${id.slice(0, 8)}` : 'chunk N/D';
   }
 
   formatUsd(value: number | undefined): string {
-    if (value === undefined || value === null) return 'N/D';
-    return `$${value.toFixed(6)} USD`;
+    return value === undefined || value === null ? 'N/D' : `$${value.toFixed(6)} USD`;
   }
 
   formatNumber(value: number | undefined): string {
-    if (value === undefined || value === null) return 'N/D';
-    return value.toFixed(3);
+    return value === undefined || value === null ? 'N/D' : value.toFixed(3);
   }
 
   getIaResultClass(): string {
@@ -726,26 +1088,151 @@ export class LineamientoDetailComponent implements OnInit {
   }
 
   formatPageRange(pageStart: number | undefined, pageEnd: number | undefined): string {
-    if (!pageStart) return 'Pág. N/D';
-    if (pageEnd && pageEnd !== pageStart) return `Pág. ${pageStart}-${pageEnd}`;
-    return `Pág. ${pageStart}`;
-  }
-
-  verComponente(componente: 'A' | 'B' | 'C' | 'D' | 'E'): void {
-    if (!this.programa()) return;
-    this.router.navigate(['/programas', this.programa()!.id, 'lineamiento', this.numeroLineamiento(), 'componente', componente]);
-  }
-
-  volverAComponentes(): void {
-    if (!this.programa()) return;
-    this.router.navigate(['/programas', this.programa()!.id, 'lineamiento', this.numeroLineamiento()]);
-  }
-
-  getNombreComponente(letra: 'A' | 'B' | 'C' | 'D' | 'E'): string {
-    return COMPONENTES_CONDICION_3.find(c => c.letra === letra)?.nombre ?? `Componente ${letra}`;
+    if (!pageStart) return 'Pag. N/D';
+    return pageEnd && pageEnd !== pageStart ? `Pag. ${pageStart}-${pageEnd}` : `Pag. ${pageStart}`;
   }
 
   goBack(): void {
     this.router.navigate(['/programas', this.programa()?.id]);
+  }
+
+  // ── Recomendar texto IA ───────────────────────────────────────────────────
+
+  tituloRecomendar(): string {
+    const tituloSec = this.seccionTitulo()?.trim() || this.seccionCodigo() || 'Seccion';
+    return `Texto sugerido para ${tituloSec}`;
+  }
+
+  modoSugeridoLabel(): string {
+    return this.detectarModo() === 'CREATE'
+      ? 'Modo: crear desde cero'
+      : 'Modo: mejorar contenido actual';
+  }
+
+  private detectarModo(): RecomendarTextoMode {
+    return (this.textoLineamiento() || '').trim() ? 'IMPROVE' : 'CREATE';
+  }
+
+  /**
+   * Heurística client-side: deshabilita el botón si el frontend no detecta
+   * ningún elemento de contexto. La validación dura corre en el backend.
+   */
+  puedeRecomendarTexto(): boolean {
+    if (!this.seccionTitulo().trim()) return false;
+    const condicionDesc = (this.descripcionCondicion() || '').trim();
+    const contenidoActual = (this.textoLineamiento() || '').trim();
+    const tieneEvidencias = this.evidencias().length > 0;
+    const tieneOtrasSecciones = this.secciones().some(
+      s => s.id !== this.seccionId() && (s.contenidoRedactado ?? '').trim().length >= 30
+    );
+    const tienePrograma = !!this.programa()?.nombre?.trim();
+    return (
+      condicionDesc.length > 0 ||
+      contenidoActual.length > 0 ||
+      tieneEvidencias ||
+      tieneOtrasSecciones ||
+      tienePrograma
+    );
+  }
+
+  abrirRecomendarTexto(): void {
+    if (!this.seccionId() || !this.seccionTitulo().trim()) return;
+    this.recomendarOpen.set(true);
+    this.recomendarError.set(null);
+    this.recomendarResult.set(null);
+    this.recomendarUserInstruction.set('');
+    this.copiadoFlash.set(false);
+  }
+
+  cerrarRecomendarTexto(): void {
+    if (this.recomendandoTexto()) return;
+    this.recomendarOpen.set(false);
+    this.recomendandoTexto.set(false);
+    if (this.copiadoFlashTimer) {
+      clearTimeout(this.copiadoFlashTimer);
+      this.copiadoFlashTimer = null;
+    }
+    this.copiadoFlash.set(false);
+  }
+
+  onRecomendarInstructionInput(event: Event): void {
+    this.recomendarUserInstruction.set((event.target as HTMLInputElement).value);
+  }
+
+  ejecutarRecomendarTexto(): void {
+    const id = this.seccionId();
+    if (!id || this.recomendandoTexto()) return;
+
+    this.recomendandoTexto.set(true);
+    this.recomendarError.set(null);
+    this.recomendarResult.set(null);
+
+    this.seccionService.recomendarTextoIA(id, {
+      mode: this.detectarModo(),
+      userInstruction: this.recomendarUserInstruction().trim() || undefined
+    }).subscribe({
+      next: (resp) => {
+        this.recomendarResult.set(resp);
+        this.recomendandoTexto.set(false);
+      },
+      error: (err) => {
+        this.recomendarError.set(this.describeRecomendarError(err));
+        this.recomendandoTexto.set(false);
+      }
+    });
+  }
+
+  copiarSugerido(): void {
+    const text = this.recomendarResult()?.suggestedText;
+    if (!text) return;
+    const finish = () => {
+      this.copiadoFlash.set(true);
+      if (this.copiadoFlashTimer) clearTimeout(this.copiadoFlashTimer);
+      this.copiadoFlashTimer = setTimeout(() => this.copiadoFlash.set(false), 1800);
+    };
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).then(finish).catch(() => alert('No fue posible copiar al portapapeles.'));
+    } else {
+      // Legacy fallback
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try { document.execCommand('copy'); finish(); } catch { alert('No fue posible copiar.'); }
+      textarea.remove();
+    }
+  }
+
+  /**
+   * Reemplaza el textarea con el texto sugerido. No persiste — el usuario debe
+   * revisar y presionar "Guardar seccion" para confirmar.
+   */
+  insertarSugerido(): void {
+    const text = this.recomendarResult()?.suggestedText;
+    if (!text) return;
+    this.textoLineamiento.set(text);
+    this.cerrarRecomendarTexto();
+  }
+
+  private describeRecomendarError(err: unknown): string {
+    if (err && typeof err === 'object' && 'status' in err) {
+      const status = (err as { status?: number }).status;
+      const body = (err as { error?: unknown }).error;
+      const message =
+        typeof body === 'object' && body !== null && 'error' in body
+          ? String((body as { error?: string }).error ?? '')
+          : typeof body === 'string'
+            ? body
+            : '';
+      if (status === 0) return 'No se pudo contactar al servidor. Verifica tu conexion.';
+      if (status === 400) return message || 'No hay contexto suficiente para generar una recomendacion.';
+      if (status === 404) return 'La seccion no existe.';
+      if (status === 422) return message || 'La solicitud no se pudo procesar con la informacion disponible.';
+      if (status === 503) return message || 'El servicio IA no esta disponible temporalmente. Reintenta en unos minutos.';
+      return message || `Error ${status} al generar la recomendacion.`;
+    }
+    return 'Ocurrio un error inesperado al generar la recomendacion.';
   }
 }

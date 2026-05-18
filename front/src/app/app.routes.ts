@@ -17,6 +17,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
       },
       {
+        path: 'condiciones',
+        loadComponent: () => import('./features/condiciones/condiciones-page.component').then(m => m.CondicionesPageComponent)
+      },
+      {
         path: 'programas',
         children: [
           {

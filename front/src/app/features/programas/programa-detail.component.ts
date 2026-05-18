@@ -2,10 +2,8 @@ import { Component, ChangeDetectionStrategy, inject, signal, OnInit } from '@ang
 import { Router, ActivatedRoute } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ProgramaService } from '../../core/services/programa.service';
-import { DocumentoBaseService } from '../../core/services/documento-base.service';
 import { LineamientoService } from '../../core/services/lineamiento.service';
 import { ProgramaDTO } from '../../core/models/programa.model';
-import { DocumentoBaseDTO } from '../../core/models/evidencia.model';
 import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lineamiento.model';
 
 @Component({
