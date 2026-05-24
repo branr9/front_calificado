@@ -566,9 +566,9 @@ export class ProgramaFormComponent implements OnInit {
   }
 
   private uploadDocumentos(programaId: number): void {
-    // Fetch the 9 lineamientos auto-created with the programa, then distribute files:
-    // archivosLineamientos → lineamiento 1, archivosSecciones → lineamiento 2,
-    // archivosEvidencias  → lineamiento 3, archivosDocumentos  → lineamiento 4+
+    // Fetch the 9 conditions auto-created with the programa, then distribute files:
+    // archivosLineamientos -> condition 1, archivosSecciones -> condition 2,
+    // archivosEvidencias  -> condition 3, archivosDocumentos  -> condition 4+
     this.lineamientoService.getLineamientos(programaId).pipe(
       switchMap(lineamientos => {
         if (!lineamientos.length) return of([]);

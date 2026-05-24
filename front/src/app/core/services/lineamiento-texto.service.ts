@@ -47,7 +47,7 @@ export class LineamientoTextoService {
     );
   }
 
-  /** Recupera el documento completo compilado con los 9 lineamientos. */
+  /** Recupera el documento completo compilado con las 9 condiciones. */
   getDocumentoCompilado(programaId: number): Observable<DocumentoCompiladoDTO> {
     return this.http.get<DocumentoCompiladoDTO>(
       `${this.apiUrl}/programa/${programaId}/documento-completo`

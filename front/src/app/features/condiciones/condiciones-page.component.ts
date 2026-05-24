@@ -168,7 +168,7 @@ interface CondicionData {
             <div class="empty-card">
               <h3>Este programa aún no tiene condiciones registradas.</h3>
               <p>
-                Cuando se creen los 9 lineamientos del Decreto 1330 de 2019 para
+                Cuando se creen las 9 condiciones del Decreto 1330 de 2019 para
                 este programa, aparecerán aquí con su contenido, anexos y
                 avance.
               </p>

@@ -24,14 +24,23 @@ interface BackendLineamiento {
   avancePorcentual: number | null;
 }
 
+function isGenericLineamientoTitle(title: string | null | undefined, numero: number): boolean {
+  const normalized = (title ?? '').trim().toLowerCase();
+  return normalized === `lineamiento ${numero}` || normalized === `lineamiento ${numero}.`;
+}
+
 function adapt(b: BackendLineamiento): LineamientoDTO {
   const ref = LINEAMIENTOS_DECRETO_1330.find(l => l.numero === b.numero);
   const porcentaje = b.avancePorcentual ?? 0;
+  const nombre = isGenericLineamientoTitle(b.titulo, b.numero)
+    ? ref?.nombre
+    : b.titulo;
+
   return {
     id: b.id,
     programaId: b.programaId,
     numero: b.numero,
-    nombre: b.titulo || ref?.nombre || `Condición ${b.numero}`,
+    nombre: nombre || ref?.nombre || `Condición ${b.numero}`,
     descripcion: b.descripcion ?? '',
     icono: ref?.icono ?? '',
     porcentaje,
@@ -72,7 +81,7 @@ export class LineamientoService {
 
   /**
    * Aggregated progress for a program. The backend does not currently expose
-   * a {@code /progreso} endpoint, so we derive it from the lineamientos
+   * a {@code /progreso} endpoint, so we derive it from the conditions
    * themselves. Kept as a method so existing consumers (dashboard) keep
    * working unchanged.
    */

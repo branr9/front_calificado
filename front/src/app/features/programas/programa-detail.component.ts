@@ -76,7 +76,7 @@ import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lin
 
         <!-- Main Content -->
         <div class="content-grid">
-          <!-- Lineamientos del Decreto 1330 -->
+          <!-- Condiciones del Decreto 1330 -->
           <div class="lineamientos-card">
             <div class="card-header">
               <h2>
