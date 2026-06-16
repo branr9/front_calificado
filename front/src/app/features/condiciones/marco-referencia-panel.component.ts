@@ -50,7 +50,7 @@ import { AuthService } from '../../core/services/auth.service';
           </div>
         </div>
         <div class="head-right">
-          @if (canManage()) {
+          @if (canUpload()) {
             <button class="head-cta" type="button" (click)="openUpload($event)">
               <span [innerHTML]="plusSvg()"></span>
               <span>Subir documento</span>
@@ -74,7 +74,7 @@ import { AuthService } from '../../core/services/auth.service';
                 la IA los usará automáticamente como contexto en cada análisis. No hace falta
                 subirlos en cada condición — se indexan una vez.
               </p>
-              @if (canManage()) {
+              @if (canUpload()) {
                 <button class="empty-cta" type="button" (click)="openUpload($event)">
                   <span [innerHTML]="plusSvg()"></span>
                   <span>Subir el primer documento</span>
@@ -87,7 +87,7 @@ import { AuthService } from '../../core/services/auth.service';
                 <article class="doc-tile" [attr.data-scope]="doc.scope">
                   <div class="tile-top">
                     <span class="scope-pill" [attr.data-scope]="doc.scope">{{ scopeLabel(doc.scope) }}</span>
-                    @if (canManage()) {
+                    @if (canDelete()) {
                       <button class="tile-delete" type="button"
                               [attr.aria-label]="'Eliminar ' + doc.nombre"
                               (click)="confirmDelete(doc)">
@@ -697,7 +697,8 @@ export class MarcoReferenciaPanelComponent implements OnChanges {
     descripcion: ''
   };
 
-  protected canManage = computed(() => this.authService.hasRole('ADMINISTRADOR'));
+  protected canUpload = computed(() => this.authService.hasPermission('WRITE_EVIDENCIA'));
+  protected canDelete = computed(() => this.authService.hasPermission('DELETE_EVIDENCIA'));
 
   ngOnChanges(changes: SimpleChanges): void {
     if ('programaId' in changes) this.reload();

@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject
 import { DecimalPipe } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { AnexoVM, CondicionDocumentVM, statusLabel } from '../../core/models/condicion.model';
+import { HistorialCambioDTO } from '../../core/models/historial-cambio.model';
 import { AttachmentPanelComponent } from './attachment-panel.component';
 
 @Component({
@@ -69,6 +70,33 @@ import { AttachmentPanelComponent } from './attachment-panel.component';
             [conditionNumber]="data.numero"
             (download)="onDownloadAnexo($event)"
             (upload)="onUploadAnexo($event)" />
+
+          <section class="change-history">
+            <div class="history-head">
+              <h3>Historial de modificaciones</h3>
+              @if (historialLoading) {
+                <span>Cargando...</span>
+              }
+            </div>
+
+            @if (!historialLoading && historial.length === 0) {
+              <p class="history-empty">Sin modificaciones registradas.</p>
+            }
+
+            @for (item of historial; track item.id) {
+              <article class="history-item">
+                <div class="history-top">
+                  <span class="history-action action-{{ item.accion.toLowerCase() }}">{{ labelAccion(item.accion) }}</span>
+                  <time>{{ formatFecha(item.fecha) }}</time>
+                </div>
+                <p class="history-detail">{{ item.detalle || 'Cambio registrado' }}</p>
+                <div class="history-user">
+                  <strong>{{ item.nombreCompleto || item.username }}</strong>
+                  <span>{{ item.rol || item.username }}</span>
+                </div>
+              </article>
+            }
+          </section>
         </div>
       </div>
 
@@ -244,6 +272,89 @@ import { AttachmentPanelComponent } from './attachment-panel.component';
 
     .doc-card-aside { min-width: 0; }
 
+    .change-history {
+      margin-top: 1rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.85rem;
+      overflow: hidden;
+      background: #fff;
+    }
+    .history-head {
+      padding: 0.85rem 1rem;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .history-head h3 {
+      margin: 0;
+      color: #0f172a;
+      font-size: 14px;
+      font-weight: 800;
+    }
+    .history-head span {
+      color: #64748b;
+      font-size: 12px;
+    }
+    .history-empty {
+      margin: 0;
+      padding: 1rem;
+      color: #94a3b8;
+      font-size: 13px;
+      font-style: italic;
+    }
+    .history-item {
+      padding: 0.9rem 1rem;
+      border-bottom: 1px solid #eef2f7;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+    .history-item:last-child { border-bottom: 0; }
+    .history-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.6rem;
+    }
+    .history-action {
+      border-radius: 999px;
+      padding: 0.18rem 0.5rem;
+      color: #fff;
+      font-size: 10.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+    .action-crear, .action-subir { background: #006600; }
+    .action-actualizar { background: #0f766e; }
+    .action-eliminar { background: #b91c1c; }
+    .history-top time {
+      color: #64748b;
+      font-size: 11.5px;
+      white-space: nowrap;
+    }
+    .history-detail {
+      margin: 0;
+      color: #334155;
+      font-size: 12.5px;
+      line-height: 1.45;
+    }
+    .history-user {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+    .history-user strong {
+      color: #0f172a;
+      font-size: 12.5px;
+    }
+    .history-user span {
+      color: #64748b;
+      font-size: 11.5px;
+    }
+
     .doc-card-actions {
       background: #f8fafc;
       border-top: 1px solid #eef2f7;
@@ -304,6 +415,8 @@ export class ConditionDocumentCardComponent {
   @Input({ required: true }) data!: CondicionDocumentVM;
   /** Next condition number, when one exists — used for the "Siguiente" button. */
   @Input() nextCondition: CondicionDocumentVM | null = null;
+  @Input() historial: HistorialCambioDTO[] = [];
+  @Input() historialLoading = false;
 
   @Output() editar = new EventEmitter<CondicionDocumentVM>();
   @Output() pedirIA = new EventEmitter<CondicionDocumentVM>();
@@ -338,6 +451,26 @@ export class ConditionDocumentCardComponent {
 
   onDownloadAnexo(anexo: AnexoVM): void {
     this.downloadAnexo.emit({ conditionNumber: this.data.numero, anexo });
+  }
+
+  labelAccion(accion: string): string {
+    const labels: Record<string, string> = {
+      CREAR: 'Creo',
+      ACTUALIZAR: 'Actualizo',
+      ELIMINAR: 'Elimino',
+      SUBIR: 'Subio'
+    };
+    return labels[accion] ?? accion;
+  }
+
+  formatFecha(fecha: string): string {
+    if (!fecha) return '';
+    return new Date(fecha).toLocaleDateString('es-CO', {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   }
 
   editSvg(): SafeHtml {

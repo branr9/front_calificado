@@ -29,10 +29,12 @@ import { LineamientoService } from '../../core/services/lineamiento.service';
 import { SeccionService } from '../../core/services/seccion.service';
 import { EvidenciaService } from '../../core/services/evidencia.service';
 import { RevisionGeneralService } from '../../core/services/revision-general.service';
+import { HistorialCambioService } from '../../core/services/historial-cambio.service';
 import { ProgramaDTO } from '../../core/models/programa.model';
 import { LineamientoDTO } from '../../core/models/lineamiento.model';
 import { SeccionDTO } from '../../core/models/seccion.model';
 import { EvidenciaDTO } from '../../core/models/evidencia.model';
+import { HistorialCambioDTO } from '../../core/models/historial-cambio.model';
 import {
   AnexoVM,
   CONDICION_3_SUBCOMPONENTES,
@@ -54,7 +56,6 @@ import { ConditionDocumentCardComponent } from './condition-document-card.compon
 import { ConditionIndexSidebarComponent } from './condition-index-sidebar.component';
 import { MarcoReferenciaPanelComponent } from './marco-referencia-panel.component';
 import { RevisionGeneralPanelComponent } from './revision-general-panel.component';
-import { RevisionHistorialComponent } from './revision-historial.component';
 
 interface CondicionData {
   lineamiento: LineamientoDTO;
@@ -71,8 +72,7 @@ interface CondicionData {
     ConditionDocumentCardComponent,
     ConditionIndexSidebarComponent,
     MarcoReferenciaPanelComponent,
-    RevisionGeneralPanelComponent,
-    RevisionHistorialComponent
+    RevisionGeneralPanelComponent
   ],
   template: `
     <div class="page">
@@ -179,6 +179,8 @@ interface CondicionData {
             <app-condition-document-card
               [data]="cond"
               [nextCondition]="nextCondition(i)"
+              [historial]="historialPorCondicion(cond.numero)"
+              [historialLoading]="historialCambiosLoading()"
               (editar)="onEditarCondicion($event)"
               (pedirIA)="onPedirIA($event)"
               (uploadAnexo)="onUploadAnexo($event)"
@@ -187,15 +189,6 @@ interface CondicionData {
               (goToNext)="onGoToNext($event)" />
           }
 
-          @if (programaSeleccionado()) {
-            <section class="history-section">
-              <app-revision-historial
-                [items]="revisionHistory()"
-                [loading]="historyLoading()"
-                (select)="onHistoryItemSelected($event)"
-                (refresh)="reloadHistory()" />
-            </section>
-          }
         </main>
 
         <aside class="doc-sidebar">
@@ -475,6 +468,7 @@ export class CondicionesPageComponent implements OnInit, OnDestroy, AfterViewIni
   private seccionService = inject(SeccionService);
   private evidenciaService = inject(EvidenciaService);
   private revisionGeneralService = inject(RevisionGeneralService);
+  private historialCambioService = inject(HistorialCambioService);
   private sanitizer = inject(DomSanitizer);
   private router = inject(Router);
 
@@ -494,6 +488,8 @@ export class CondicionesPageComponent implements OnInit, OnDestroy, AfterViewIni
   protected revisionElapsedSeconds = signal<number | null>(null);
   protected revisionHistory = signal<RevisionGeneralJobDTO[]>([]);
   protected historyLoading = signal<boolean>(false);
+  protected historialCambios = signal<HistorialCambioDTO[]>([]);
+  protected historialCambiosLoading = signal<boolean>(false);
 
   private pollSub: Subscription | null = null;
   private elapsedSub: Subscription | null = null;
@@ -597,6 +593,7 @@ export class CondicionesPageComponent implements OnInit, OnDestroy, AfterViewIni
       } else {
         this.programaSeleccionadoId.set(null);
         this.condicionData.set([]);
+        this.historialCambios.set([]);
         this.revisionHistory.set([]);
       }
     });
@@ -637,6 +634,7 @@ export class CondicionesPageComponent implements OnInit, OnDestroy, AfterViewIni
     });
 
     this.reloadHistory(programaId);
+    this.reloadHistorialCambios(programaId);
   }
 
   private loadCondicionData(lin: LineamientoDTO): Observable<CondicionData> {
@@ -713,6 +711,27 @@ export class CondicionesPageComponent implements OnInit, OnDestroy, AfterViewIni
       this.revisionHistory.set(items);
       this.historyLoading.set(false);
     });
+  }
+
+  reloadHistorialCambios(programaIdOverride?: number): void {
+    const programaId = programaIdOverride ?? this.programaSeleccionadoId();
+    if (programaId == null) {
+      this.historialCambios.set([]);
+      return;
+    }
+    this.historialCambiosLoading.set(true);
+    this.historialCambioService.listar(programaId).pipe(
+      catchError(() => of([] as HistorialCambioDTO[]))
+    ).subscribe((items) => {
+      this.historialCambios.set(items);
+      this.historialCambiosLoading.set(false);
+    });
+  }
+
+  historialPorCondicion(numero: number): HistorialCambioDTO[] {
+    return this.historialCambios()
+      .filter(item => item.condicionNumero === numero)
+      .slice(0, 5);
   }
 
   /**
@@ -808,7 +827,10 @@ export class CondicionesPageComponent implements OnInit, OnDestroy, AfterViewIni
     this.evidenciaService.uploadEvidencia(cond.lineamientoId, file).subscribe({
       next: () => {
         const programaId = this.programaSeleccionadoId();
-        if (programaId != null) this.cargarDatosPrograma(programaId);
+        if (programaId != null) {
+          this.cargarDatosPrograma(programaId);
+          this.reloadHistorialCambios(programaId);
+        }
       },
       error: () => console.error('No se pudo subir el anexo.')
     });

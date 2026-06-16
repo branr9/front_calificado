@@ -112,9 +112,8 @@ import { UsuarioDTO, CreateUsuarioDTO, UpdateUsuarioDTO } from '../../core/model
                 >
                   <option value="">Selecciona un rol</option>
                   <option value="ADMINISTRADOR">Administrador</option>
-                  <option value="FUNCIONARIO">Funcionario</option>
+                  <option value="DIRECTIVO">Directivo</option>
                   <option value="DOCENTE">Docente</option>
-                  <option value="USUARIO">Usuario</option>
                 </select>
                 @if (isFieldInvalid('rol')) {
                   <span class="error-message">El rol es obligatorio</span>

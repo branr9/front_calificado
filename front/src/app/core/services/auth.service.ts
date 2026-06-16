@@ -90,6 +90,18 @@ export class AuthService {
     return this.userSignal()?.rol === role;
   }
 
+  hasPermission(permission: string): boolean {
+    return this.userSignal()?.permisos?.includes(permission) ?? false;
+  }
+
+  hasAnyPermission(permissions: string[]): boolean {
+    if (permissions.length === 0) {
+      return true;
+    }
+    const userPermissions = this.userSignal()?.permisos ?? [];
+    return permissions.some(permission => userPermissions.includes(permission));
+  }
+
   logout(): void {
     this.clearSession();
     this.router.navigate(['/login']);

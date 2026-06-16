@@ -14,9 +14,11 @@ import { ProgramaDTO } from '../../core/models/programa.model';
           <h1>Programas Académicos</h1>
           <p class="subtitle">Gestiona todos los programas del sistema</p>
         </div>
-        <button class="btn btn-primary" (click)="onCreate()" type="button">
-          + Nuevo Programa
-        </button>
+        @if (canWritePrograma()) {
+          <button class="btn btn-primary" (click)="onCreate()" type="button">
+            + Nuevo Programa
+          </button>
+        }
       </header>
 
       @if (loading()) {
@@ -52,20 +54,24 @@ import { ProgramaDTO } from '../../core/models/programa.model';
                       [attr.aria-label]="'Ver programa ' + programa.nombre">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
                     </button>
-                    <button 
-                      class="btn-action btn-edit" 
-                      (click)="onEdit(programa.id)"
-                      type="button"
-                      [attr.aria-label]="'Editar programa ' + programa.nombre">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-                    </button>
-                    <button 
-                      class="btn-action btn-delete" 
-                      (click)="onDelete(programa.id, programa.nombre)"
-                      type="button"
-                      [attr.aria-label]="'Eliminar programa ' + programa.nombre">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-                    </button>
+                    @if (canWritePrograma()) {
+                      <button
+                        class="btn-action btn-edit"
+                        (click)="onEdit(programa.id)"
+                        type="button"
+                        [attr.aria-label]="'Editar programa ' + programa.nombre">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                      </button>
+                    }
+                    @if (canDeletePrograma()) {
+                      <button
+                        class="btn-action btn-delete"
+                        (click)="onDelete(programa.id, programa.nombre)"
+                        type="button"
+                        [attr.aria-label]="'Eliminar programa ' + programa.nombre">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                      </button>
+                    }
                   </td>
                 </tr>
               } @empty {
@@ -277,6 +283,14 @@ export class ProgramaListComponent implements OnInit {
 
   onCreate(): void {
     this.router.navigate(['/programas/nuevo']);
+  }
+
+  canWritePrograma(): boolean {
+    return this.authService.hasPermission('WRITE_PROGRAMA');
+  }
+
+  canDeletePrograma(): boolean {
+    return this.authService.hasPermission('DELETE_PROGRAMA');
   }
 
   onView(id: number): void {

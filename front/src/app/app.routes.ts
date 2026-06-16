@@ -18,10 +18,14 @@ export const routes: Routes = [
       },
       {
         path: 'condiciones',
+        canActivate: [authGuard],
+        data: { permissions: ['WRITE_LINEAMIENTO'] },
         loadComponent: () => import('./features/condiciones/condiciones-page.component').then(m => m.CondicionesPageComponent)
       },
       {
         path: 'programas',
+        canActivate: [authGuard],
+        data: { permissions: ['WRITE_PROGRAMA'] },
         children: [
           {
             path: '',
@@ -51,6 +55,8 @@ export const routes: Routes = [
       },
       {
         path: 'usuarios',
+        canActivate: [authGuard],
+        data: { permissions: ['MANAGE_USUARIOS'] },
         children: [
           {
             path: '',
@@ -65,6 +71,12 @@ export const routes: Routes = [
             loadComponent: () => import('./features/usuarios/usuario-form.component').then(m => m.UsuarioFormComponent)
           }
         ]
+      },
+      {
+        path: 'historial',
+        canActivate: [authGuard],
+        data: { permissions: ['READ_HISTORIAL'] },
+        loadComponent: () => import('./features/historial/historial-page.component').then(m => m.HistorialPageComponent)
       },
       {
         path: '',

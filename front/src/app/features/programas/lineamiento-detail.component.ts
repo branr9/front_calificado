@@ -5,7 +5,10 @@ import { EvidenciaService } from '../../core/services/evidencia.service';
 import { LineamientoService } from '../../core/services/lineamiento.service';
 import { ProgramaService } from '../../core/services/programa.service';
 import { SeccionService } from '../../core/services/seccion.service';
+import { AuthService } from '../../core/services/auth.service';
+import { HistorialCambioService } from '../../core/services/historial-cambio.service';
 import { EvidenciaDTO } from '../../core/models/evidencia.model';
+import { HistorialCambioDTO } from '../../core/models/historial-cambio.model';
 import { LineamientoDTO, LINEAMIENTOS_DECRETO_1330 } from '../../core/models/lineamiento.model';
 import { ProgramaDTO } from '../../core/models/programa.model';
 import {
@@ -92,7 +95,9 @@ import {
                       </div>
                       <div class="file-actions">
                         <button class="btn-icon" type="button" title="Descargar" (click)="downloadEvidencia(evidencia.id)">v</button>
-                        <button class="btn-icon btn-danger" type="button" title="Eliminar" (click)="deleteEvidencia(evidencia.id)">x</button>
+                        @if (canDeleteEvidencia()) {
+                          <button class="btn-icon btn-danger" type="button" title="Eliminar" (click)="deleteEvidencia(evidencia.id)">x</button>
+                        }
                       </div>
                     </div>
                   }
@@ -154,6 +159,37 @@ import {
             </div>
           </section>
 
+          <section class="panel history-panel">
+            <div class="section-header">
+              <h2>Historial de modificaciones</h2>
+              @if (historialLoading()) {
+                <span class="count-badge">Cargando</span>
+              } @else {
+                <span class="count-badge">{{ historialCondicion().length }} cambio(s)</span>
+              }
+            </div>
+            <div class="section-body history-body">
+              @for (item of historialCondicion(); track item.id) {
+                <article class="history-item">
+                  <div class="history-top">
+                    <span class="history-action action-{{ item.accion.toLowerCase() }}">{{ labelAccion(item.accion) }}</span>
+                    <time>{{ formatHistoryDate(item.fecha) }}</time>
+                  </div>
+                  <p class="history-detail">{{ item.detalle || 'Cambio registrado' }}</p>
+                  <div class="history-meta">
+                    <strong>{{ item.seccionCodigo || 'Condicion ' + item.condicionNumero }}</strong>
+                    <span>{{ item.nombreCompleto || item.username }} · {{ item.rol || item.username }}</span>
+                  </div>
+                </article>
+              } @empty {
+                <div class="empty-state">
+                  <p>No hay modificaciones registradas.</p>
+                  <span>Al guardar el texto de una seccion apareceran aqui el responsable y la fecha.</span>
+                </div>
+              }
+            </div>
+          </section>
+
           <section class="panel panel-full">
             <div class="section-header">
               <h2>Redaccion y revision IA por seccion</h2>
@@ -175,13 +211,15 @@ import {
                   Orden
                   <input class="text-input" type="number" min="1" [value]="seccionOrden()" (input)="onSeccionOrdenInput($event)" />
                 </label>
-                <button
-                  class="btn btn-danger"
-                  type="button"
-                  (click)="onEliminarSeccion()"
-                  [disabled]="!seccionId() || secciones().length <= 1 || guardandoSeccion()">
-                  Eliminar seccion
-                </button>
+                @if (canDeleteSeccion()) {
+                  <button
+                    class="btn btn-danger"
+                    type="button"
+                    (click)="onEliminarSeccion()"
+                    [disabled]="!seccionId() || secciones().length <= 1 || guardandoSeccion()">
+                    Eliminar seccion
+                  </button>
+                }
               </div>
 
               <textarea
@@ -501,6 +539,58 @@ import {
     .btn-icon.btn-danger { background: #fee2e2; color: #991b1b; }
     .count-badge, .estado-badge, .cache-chip { border-radius: 999px; padding: 0.25rem 0.7rem; font-size: 0.76rem; font-weight: 800; white-space: nowrap; }
     .count-badge { background: #006600; color: white; }
+
+    .history-panel { grid-column: 2; }
+    .history-body { display: flex; flex-direction: column; gap: 0; padding: 0; }
+    .history-item {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid #edf1f5;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .history-item:last-child { border-bottom: 0; }
+    .history-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .history-action {
+      border-radius: 999px;
+      padding: 0.2rem 0.55rem;
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+    .action-crear, .action-subir { background: #006600; }
+    .action-actualizar { background: #0f766e; }
+    .action-eliminar { background: #b91c1c; }
+    .history-top time {
+      color: #64748b;
+      font-size: 0.78rem;
+      white-space: nowrap;
+    }
+    .history-detail {
+      margin: 0;
+      color: #334155;
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+    .history-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+    .history-meta strong {
+      color: #1f2937;
+      font-size: 0.86rem;
+    }
+    .history-meta span {
+      color: #64748b;
+      font-size: 0.8rem;
+    }
     .estado-borrador { background: #fff7ed; color: #c2410c; }
     .estado-en_revision { background: #dbeafe; color: #1d4ed8; }
     .estado-validada { background: #dcfce7; color: #166534; }
@@ -645,7 +735,7 @@ import {
     @media (max-width: 900px) {
       .container { padding: 1rem; }
       .content-grid, .section-fields, .create-section { grid-template-columns: 1fr; }
-      .panel-full { grid-column: auto; }
+      .panel-full, .history-panel { grid-column: auto; }
       .section-header { align-items: flex-start; flex-direction: column; }
       .section-tab { grid-template-columns: 1fr; }
       .ia-actions { justify-content: stretch; }
@@ -658,6 +748,8 @@ export class LineamientoDetailComponent implements OnInit {
   private evidenciaService = inject(EvidenciaService);
   private lineamientoService = inject(LineamientoService);
   private seccionService = inject(SeccionService);
+  private authService = inject(AuthService);
+  private historialCambioService = inject(HistorialCambioService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
@@ -683,6 +775,8 @@ export class LineamientoDetailComponent implements OnInit {
   protected guardandoSeccion = signal(false);
   protected revisandoIA = signal(false);
   protected iaResult = signal<IaRevisionResultDTO | null>(null);
+  protected historial = signal<HistorialCambioDTO[]>([]);
+  protected historialLoading = signal(false);
 
   // ── Recomendar texto IA — modal state ─────────────────────────────────────
   protected recomendarOpen = signal(false);
@@ -699,6 +793,12 @@ export class LineamientoDetailComponent implements OnInit {
 
   protected seccionActiva = computed(() =>
     this.secciones().find(seccion => seccion.id === this.seccionId()) ?? null
+  );
+
+  protected historialCondicion = computed(() =>
+    this.historial()
+      .filter(item => item.condicionNumero === this.numeroLineamiento())
+      .slice(0, 8)
   );
 
   lineamientoId: number | null = null;
@@ -751,10 +851,31 @@ export class LineamientoDetailComponent implements OnInit {
         this.lineamientoId = lin.id;
         this.loadEvidencias(lin.id);
         this.loadSecciones(lin.id);
+        this.loadHistorial(programaId);
       },
       error: () => {
         this.error.set('No se pudo cargar la condicion');
         this.loading.set(false);
+      }
+    });
+  }
+
+  private loadHistorial(programaId?: number): void {
+    const id = programaId ?? this.programa()?.id;
+    if (!id) {
+      this.historial.set([]);
+      return;
+    }
+
+    this.historialLoading.set(true);
+    this.historialCambioService.listar(id).subscribe({
+      next: (items) => {
+        this.historial.set(items);
+        this.historialLoading.set(false);
+      },
+      error: () => {
+        this.historial.set([]);
+        this.historialLoading.set(false);
       }
     });
   }
@@ -810,6 +931,7 @@ export class LineamientoDetailComponent implements OnInit {
           if (completed === files.length) {
             this.uploading.set(false);
             this.loadEvidencias(this.lineamientoId!);
+            this.loadHistorial();
             input.value = '';
           }
         },
@@ -838,6 +960,7 @@ export class LineamientoDetailComponent implements OnInit {
       next: (lin) => {
         this.lineamientoActual.set(lin);
         this.descripcionCondicion.set(lin.descripcion ?? '');
+        this.loadHistorial();
         this.guardandoDescripcion.set(false);
       },
       error: () => {
@@ -897,6 +1020,7 @@ export class LineamientoDetailComponent implements OnInit {
         this.seleccionarSeccion(created);
         this.creandoSeccion.set(false);
         this.prepareNewSectionDefaults();
+        this.loadHistorial();
         this.guardandoSeccion.set(false);
       },
       error: () => {
@@ -912,6 +1036,7 @@ export class LineamientoDetailComponent implements OnInit {
       next: (sec) => {
         this.replaceSeccion(sec);
         this.seleccionarSeccion(sec);
+        this.loadHistorial();
         this.guardandoTexto.set(false);
       },
       error: () => {
@@ -957,6 +1082,7 @@ export class LineamientoDetailComponent implements OnInit {
           this.seleccionarSeccion(remaining[0]);
         }
         this.prepareNewSectionDefaults();
+        this.loadHistorial();
         this.guardandoSeccion.set(false);
       },
       error: () => {
@@ -1027,8 +1153,39 @@ export class LineamientoDetailComponent implements OnInit {
   deleteEvidencia(id: number): void {
     if (!confirm('Eliminar esta evidencia?')) return;
     this.evidenciaService.deleteEvidencia(id).subscribe({
-      next: () => this.lineamientoId && this.loadEvidencias(this.lineamientoId),
+      next: () => {
+        if (this.lineamientoId) this.loadEvidencias(this.lineamientoId);
+        this.loadHistorial();
+      },
       error: () => alert('Error al eliminar')
+    });
+  }
+
+  canDeleteEvidencia(): boolean {
+    return this.authService.hasPermission('DELETE_EVIDENCIA');
+  }
+
+  canDeleteSeccion(): boolean {
+    return this.authService.hasPermission('DELETE_SECCION');
+  }
+
+  labelAccion(accion: string): string {
+    const labels: Record<string, string> = {
+      CREAR: 'Creo',
+      ACTUALIZAR: 'Actualizo',
+      ELIMINAR: 'Elimino',
+      SUBIR: 'Subio'
+    };
+    return labels[accion] ?? accion;
+  }
+
+  formatHistoryDate(dateString: string): string {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleDateString('es-CO', {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   }
 
