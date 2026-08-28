@@ -57,6 +57,10 @@ export class LoginComponent {
         return 'Credenciales inválidas.';
       }
 
+      if (err.status === 403) {
+        return 'El servidor rechazó la petición de login. Revisa la configuración CORS o de seguridad del backend.';
+      }
+
       if (err.status === 0) {
         return 'No hay conexión con el servidor de autenticación.';
       }
