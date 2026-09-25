@@ -44,4 +44,4 @@ export const appConfig: ApplicationConfig = {
       useValue: 'es-CO'
     }
   ]
-};
+};  

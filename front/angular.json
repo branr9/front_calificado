@@ -55,6 +55,11 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "allowedHosts": [
+              "registrocalificado.uceva.edu.co"
+            ]
+          },
           "configurations": {
             "production": {
               "buildTarget": "frontRegistro:build:production"
